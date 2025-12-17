@@ -1,5 +1,5 @@
 import { ChildProcess, spawn } from "node:child_process";
-import logger from "./logger";
+import Logger from "./logger";
 import { waitSeconds } from "./time-helper";
 
 let processID: number | undefined = undefined;
@@ -12,7 +12,7 @@ export async function startProcess(
   path: string,
   delaySec: number
 ): Promise<boolean> {
-  logger.debug(`startProcess:  ${command}`);
+  Logger.debug(`startProcess:  ${command}`);
   try {
     const backgroundProcess: ChildProcess = spawn(command, [], {
       cwd: path,
@@ -22,21 +22,21 @@ export async function startProcess(
     });
 
     processID = backgroundProcess.pid;
-    logger.debug(`Process PID: ${processID}`);
+    Logger.debug(`Process PID: ${processID}`);
 
     backgroundProcess.stdout?.on("data", (chunk: Buffer) => {
       const nextMessage = chunk.toString().trim();
-      logger.debug(nextMessage);
+      Logger.debug(nextMessage);
     });
 
     backgroundProcess.stderr?.on("data", (chunk: Buffer) => {
       const errorMessage = chunk.toString().trim();
-      logger.error(errorMessage);
+      Logger.error(errorMessage);
     });
 
     // listen for exit event
     backgroundProcess.on("exit", (code: number | null) => {
-      logger.debug(`Background process ${processID} exited with code ${code}`);
+      Logger.debug(`Background process ${processID} exited with code ${code}`);
     });
 
     await waitSeconds(delaySec);
@@ -44,14 +44,14 @@ export async function startProcess(
     //backgroundProcess.unref();
     return true;
   } catch (err) {
-    logger.error(err);
+    Logger.error(err);
     return false;
   }
 }
 
 // if background process exists, stop it
 export function endProcess() {
-  logger.debug(`endProcess:  ${processID}`);
+  Logger.debug(`endProcess:  ${processID}`);
   if (processID) {
     spawn("taskkill", ["/pid", processID.toString(), "/f", "/t"]);
   }
