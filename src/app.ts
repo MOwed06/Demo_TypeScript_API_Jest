@@ -20,13 +20,16 @@ async function main(): Promise<void> {
 
     // launch the API process in the background
     console.log(`${TimeHelper.getTimeMSec()} - Starting API process...`);
-    await ProcessHandler.startProcess(
+    const processStatus = await ProcessHandler.startProcess(
       Config.apiRunCommand,
       Config.apiProjectPath,
-      Config.apiLaunchDelaySec
+      Config.apiLaunchDelaySec,
+      Config.apiStatusMessage
     );
 
-    console.log(`${TimeHelper.getTimeMSec()} - API launched complete`);
+    console.log(
+      `${TimeHelper.getTimeMSec()} - API launched, Status: ${processStatus}`
+    );
 
     // demonstrate API call for known user
     const userDetails = await ApiMessenger.getUserDetails(
