@@ -11,11 +11,15 @@ describe("Dummy integration test", () => {
     expect(false).toBe(false);
   });
 
-  test("long duration test", async () => {
-    jest.setTimeout(TestConfig.longTestTimeout);
-    Logger.info("test start");
-    await await new Promise((resolve) => setTimeout(resolve, 6000));
-    Logger.info("test wait end");
-    expect(true).toBe(true);
-  });
+  test(
+    "long duration test",
+    async () => {
+      Logger.info(`Setting test timeout to ${TestConfig.longTestTimeout} ms`);
+      Logger.info("test start");
+      await await new Promise((resolve) => setTimeout(resolve, 6000));
+      Logger.info("test wait end");
+      expect(true).toBe(true);
+    },
+    TestConfig.longTestTimeout
+  );
 });
