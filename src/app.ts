@@ -4,11 +4,15 @@ import * as Config from "./app-config.json";
 import * as TimeHelper from "./utils/time-helper";
 import * as DbHandler from "./db-handler";
 import * as ApiMessenger from "./api-messenger";
+import { info } from "node:console";
 
+// application main includes only a basic demonstration
+// of selected features of the BigBooks API
+// refer to the integrationTests folder for more complete examples
 async function main(): Promise<void> {
-  console.log("Hello, World!");
-
-  Logger.info("msg start.");
+  let infoMessage = `App started`;
+  console.log(infoMessage);
+  Logger.info(`${TimeHelper.getTimeMSec()} - ${infoMessage}`);
 
   const userInfo03 = DbHandler.getUser(3);
   console.log("User info for key=3:", userInfo03);
@@ -69,8 +73,9 @@ async function main(): Promise<void> {
   //   console.log("Randomly selected element from array:", randomElement);
   // }
 
-  console.log("End of program.");
-  Logger.info("program end.");
+  infoMessage = `App ended`;
+  console.log(infoMessage);
+  Logger.info(`${TimeHelper.getTimeMSec()} - ${infoMessage}`);
 }
 
 main();

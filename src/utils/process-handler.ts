@@ -17,17 +17,12 @@ export async function startProcess(
     const backgroundProcess: ChildProcess = spawn(command, [], {
       cwd: path,
       detached: true,
-      stdio: ["ignore", "pipe", "pipe"],
+      stdio: ["ignore", "ignore", "pipe"],
       shell: true,
     });
 
     processID = backgroundProcess.pid;
     Logger.debug(`Process PID: ${processID}`);
-
-    backgroundProcess.stdout?.on("data", (chunk: Buffer) => {
-      const nextMessage = chunk.toString().trim();
-      Logger.debug(nextMessage);
-    });
 
     backgroundProcess.stderr?.on("data", (chunk: Buffer) => {
       const errorMessage = chunk.toString().trim();
@@ -36,12 +31,12 @@ export async function startProcess(
 
     // listen for exit event
     backgroundProcess.on("exit", (code: number | null) => {
-      Logger.debug(`Background process ${processID} exited with code ${code}`);
+      Logger.info(`Background process ${processID} exited with code ${code}`);
     });
 
     await waitSeconds(delaySec);
 
-    //backgroundProcess.unref();
+    backgroundProcess.unref();
     return true;
   } catch (err) {
     Logger.error(err);
