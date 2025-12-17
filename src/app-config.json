@@ -1,0 +1,10 @@
+{
+  "loggingLevel": 3,
+  "databaseFile": "C:\\GitHub\\Demo_CSharp_API\\src\\BigBooks.API\\BigBooks.db",
+  "apiBaseUrl": "https://127.0.0.1:7119",
+  "apiProjectPath": "C:\\GitHub\\Demo_CSharp_API\\src\\BigBooks.API",
+  "apiRunCommand": "dotnet run --launch-profile https",
+  "apiLaunchDelaySec": 10,
+  "defaultUserPassword": "N0tV3ryS3cret",
+  "adminUserId": "Bruce.Wayne@demo.com"
+}
