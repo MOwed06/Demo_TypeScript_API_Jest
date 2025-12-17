@@ -16,13 +16,18 @@ export async function startProcess(
   try {
     const backgroundProcess: ChildProcess = spawn(command, [], {
       cwd: path,
-      detached: true,
-      stdio: ["ignore", "ignore", "pipe"],
+      detached: false,
+      stdio: ["ignore", "pipe", "pipe"],
       shell: true,
     });
 
     processID = backgroundProcess.pid;
     Logger.debug(`Process PID: ${processID}`);
+
+    backgroundProcess.stdout?.on("data", (chunk: Buffer) => {
+      const infoMessage = chunk.toString().trim();
+      Logger.info(infoMessage);
+    });
 
     backgroundProcess.stderr?.on("data", (chunk: Buffer) => {
       const errorMessage = chunk.toString().trim();
