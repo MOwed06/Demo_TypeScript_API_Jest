@@ -1,6 +1,7 @@
 /**
  * File: src/utils/logger.ts
  * Description: This file sets up a logger using tslog to capture logs as text messages to file
+ * logs are stored in the logs/ folder with a timestamped filename for each run
  */
 
 import { ILogObjMeta, Logger } from "tslog";
