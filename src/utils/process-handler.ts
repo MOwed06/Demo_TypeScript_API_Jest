@@ -34,7 +34,7 @@ export async function startProcess(
       logger.error(errorMessage);
     });
 
-    // listend for exit event
+    // listen for exit event
     backgroundProcess.on("exit", (code: number | null) => {
       logger.debug(`Background process ${processID} exited with code ${code}`);
     });
@@ -52,7 +52,7 @@ export async function startProcess(
 // if background process exists, stop it
 export function endProcess() {
   logger.debug(`endProcess:  ${processID}`);
-  if (processID != null) {
+  if (processID) {
     spawn("taskkill", ["/pid", processID.toString(), "/f", "/t"]);
   }
 }

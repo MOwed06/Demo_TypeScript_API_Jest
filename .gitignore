@@ -142,3 +142,10 @@ vite.config.ts.timestamp-*
 CopilotIndices/
 *.vsidx
 *.wsuo
+
+# Ignore Visual Studio cache files
+.vs/
+*/DocumentLayout.json
+*/VSWorkspaceState.json
+*.slnx.sqlite
+*.vs/slnx.sqlite-journal

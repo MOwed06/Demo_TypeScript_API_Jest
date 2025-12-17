@@ -15,5 +15,9 @@ export function getUser(key: number) {
   const dbData = bigBooksDb
     .prepare("SELECT * FROM appUsers WHERE key = ?")
     .get(key);
+  if (!dbData) {
+    throw new Error(`User with key=${key} not found`);
+  }
+
   return new Entities.AppUser(dbData);
 }
