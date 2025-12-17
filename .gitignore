@@ -137,3 +137,15 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Copilot indices
+CopilotIndices/
+*.vsidx
+*.wsuo
+
+# Ignore Visual Studio cache files
+.vs/
+*/DocumentLayout.json
+*/VSWorkspaceState.json
+*.slnx.sqlite
+*.vs/slnx.sqlite-journal
