@@ -15,12 +15,12 @@ import { displayWithTime } from "./utils/console-helper";
 async function main(): Promise<void> {
   try {
     displayWithTime("Application started");
-    console.log();
+    console.log("\n");
 
     // demonstrate database access, convert db record to app-user entity
     const userInfo03 = DbHandler.getUser(3);
     displayWithTime(`User03 info: ${JSON.stringify(userInfo03)}`);
-    console.log();
+    console.log("\n");
 
     // launch the API process in the background
     displayWithTime(`Starting API process...`);
@@ -32,7 +32,7 @@ async function main(): Promise<void> {
     });
 
     console.log(
-      `${TimeHelper.getTimeMSec()} - API launched, Status: ${processStatus}`
+      `${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`
     );
 
     // demonstrate API call for known user
