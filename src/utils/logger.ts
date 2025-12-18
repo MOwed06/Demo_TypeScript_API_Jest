@@ -16,11 +16,26 @@ if (!fs.existsSync(dirPath)) {
   fs.mkdirSync(dirPath, { recursive: true });
 }
 
+const getLogLevel = (): number => {
+  const level = Config.loggingLevel.toUpperCase();
+
+  switch (level) {
+    case "TRACE:":
+      return 1;
+    case "DEBUG":
+      return 2;
+    case "WARN":
+      return 4;
+    default:
+      return 3; // INFO
+  }
+};
+
 // Create logger instance
 const logger = new Logger({
   name: "FileLogger", // Name the logger instance
   type: "hidden", // Hide console output
-  minLevel: Config.loggingLevel, // Set minimum log level
+  minLevel: getLogLevel(), // Set minimum log level
 });
 
 // create unique log file name with each run

@@ -1,5 +1,6 @@
 import * as Enum from "../enumerations";
 
+// corresponds to BigBooks.API.Models.TransactionOverviewDto.cs
 export interface TransactionDto {
   transactionKey: number;
   transactionDate: string;

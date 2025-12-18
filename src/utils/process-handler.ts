@@ -6,22 +6,23 @@
 import { ChildProcess, spawn } from "node:child_process";
 import Logger from "./logger";
 import { waitSeconds } from "./time-helper";
+import * as StringHelper from "./string-helper";
 
 let processID: number | undefined = undefined;
 
 // execute command from path as background task
 // wait for delay (seconds) before returning
 // return false if error
-export async function startProcess(
-  command: string,
-  path: string,
-  delaySec: number,
-  confirmationText?: string
-): Promise<boolean> {
-  Logger.debug(`startProcess:  ${command}`);
+export async function startProcess(options: {
+  command: string;
+  path: string;
+  delaySec: number;
+  confirmationText: string;
+}): Promise<boolean> {
+  Logger.debug(`startProcess:  ${options.command}`);
   try {
-    const backgroundProcess: ChildProcess = spawn(command, [], {
-      cwd: path,
+    const backgroundProcess: ChildProcess = spawn(options.command, [], {
+      cwd: options.path,
       detached: false,
       stdio: ["ignore", "pipe", "pipe"],
       shell: true,
@@ -47,18 +48,19 @@ export async function startProcess(
       Logger.info(`Background process ${processID} exited with code ${code}`);
     });
 
-    await waitSeconds(delaySec);
+    await waitSeconds(options.delaySec);
 
-    if (confirmationText) {
+    // if confirmation text provided, check for it in output
+    if (!StringHelper.isNullOrEmpty(options.confirmationText)) {
       const messageFound = backgroundMessages.some((msg) =>
-        msg.includes(confirmationText)
+        msg.includes(options.confirmationText)
       );
       Logger.info(
-        `Confirmation text "${confirmationText}" found: ${messageFound}`
+        `Confirmation text "${options.confirmationText}" found: ${messageFound}`
       );
       if (!messageFound) {
         throw new Error(
-          `Confirmation text "${confirmationText}" not found in process output.`
+          `Confirmation text "${options.confirmationText}" not found in process output.`
         );
       }
     }
