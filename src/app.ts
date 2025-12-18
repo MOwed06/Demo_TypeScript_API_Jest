@@ -19,10 +19,10 @@ async function main(): Promise<void> {
     displayWithTime("Application started");
     console.log("\n");
 
-    // demonstrate database access, convert db record to app-user entity
-    const userInfo03 = DbHandler.getUser(3);
-    displayWithTime(`User03 info: ${JSON.stringify(userInfo03)}`);
-    console.log("\n");
+    // // demonstrate database access, convert db record to app-user entity
+    // const userInfo03 = DbHandler.getUser(3);
+    // displayWithTime(`User03 info: ${JSON.stringify(userInfo03)}`);
+    // console.log("\n");
 
     // launch the API process in the background
     displayWithTime(`Starting API process...`);
@@ -37,15 +37,28 @@ async function main(): Promise<void> {
       `${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`
     );
 
-    // demonstrate API call for known user
+    // demonstrate get user details for known user
+    const ANDERSON_USER_KEY = 4;
     const userDetails = await ApiMessenger.getUserDetails(
       {
         userId: Config.adminUserId,
         password: Config.defaultUserPassword,
       },
-      22
+      ANDERSON_USER_KEY
     );
     console.log("User details response:", userDetails);
+
+    // search user details for particular transaction
+    const EXPECTED_TRANSACTION_DATE = "2025-03-17";
+    const transactionUserDetails = userDetails.transactions.find((tx) =>
+      tx.transactionDate.startsWith(EXPECTED_TRANSACTION_DATE)
+    );
+    // expect book 3 purchased on 2025-03-17
+    console.log(
+      `Transaction on ${EXPECTED_TRANSACTION_DATE}:`,
+      transactionUserDetails
+    );
+    console.log("\n");
 
     // create a new book
     const newBookAddDto = {

@@ -1,7 +1,7 @@
 import Database from "better-sqlite3";
 import * as Config from "./app-config.json";
 import Logger from "./utils/logger";
-import * as Entities from "./entities/app-user";
+import * as Entities from "./entities/db-objects";
 
 const sqlLogger = (message?: unknown, ...additionalArgs: unknown[]) => {
   Logger.debug(`SQL Query: ${message}`);
@@ -24,4 +24,16 @@ export function getUser(key: number) {
   }
 
   return new Entities.AppUser(dbData);
+}
+
+export function getBook(key: number) {
+  Logger.debug(`getBook: key=${key}`);
+  const dbData = bigBooksDb
+    .prepare("SELECT * FROM books WHERE key = ?")
+    .get(key);
+  if (!dbData) {
+    throw new Error(`Book with key=${key} not found`);
+  }
+
+  return new Entities.Book(dbData);
 }

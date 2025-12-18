@@ -9,7 +9,10 @@
 
 import * as Config from "./app-config.json";
 import { AuthRequest, AuthResponse } from "./interfaces/auth-interface";
-import { UserDetailsDto } from "./interfaces/account-interface";
+import {
+  UserAddUpdateDto,
+  UserDetailsDto,
+} from "./interfaces/account-interface";
 import Logger from "./utils/logger";
 import {
   BookReviewDto,
@@ -125,6 +128,19 @@ export const addBook = async (
     HttpMethod.POST,
     authRequest,
     bookAddDto
+  );
+  return response;
+};
+
+export const addUser = async (
+  authRequest: AuthRequest,
+  userDto: UserAddUpdateDto
+): Promise<UserDetailsDto> => {
+  const response: UserDetailsDto = await sendAuthorizedRequest(
+    ACCOUNTS_URI,
+    HttpMethod.POST,
+    authRequest,
+    userDto
   );
   return response;
 };
