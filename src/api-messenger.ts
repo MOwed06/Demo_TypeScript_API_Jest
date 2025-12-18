@@ -23,7 +23,6 @@ import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
 const BOOKS_URI = `${Config.apiBaseUrl}/api/books`;
-const TRANSACTIONS_URI = `${Config.apiBaseUrl}/api/transactions`;
 
 // configure for self-signed certificate
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
@@ -31,7 +30,6 @@ process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 enum HttpMethod {
   GET = "GET",
   POST = "POST",
-  PUT = "PUT",
   PATCH = "PATCH",
 }
 

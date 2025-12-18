@@ -1,6 +1,6 @@
 // corresponds to BigBooks.API.Models.BookAddUpdateDto.cs
 
-import { Genre } from "src/enumerations";
+import { Genre } from "../enumerations";
 
 export interface BookAddUpdateDto {
   title: string;

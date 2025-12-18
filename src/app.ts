@@ -12,17 +12,12 @@ import * as DbHandler from "./db-handler";
 import * as ApiMessenger from "./api-messenger";
 import { displayWithTime } from "./utils/console-helper";
 import * as RandomData from "./utils/random-data";
-import { Genre } from "./enumerations";
+import { Genre, UserRole } from "./enumerations";
 
 async function main(): Promise<void> {
   try {
     displayWithTime("Application started");
     console.log("\n");
-
-    // // demonstrate database access, convert db record to app-user entity
-    // const userInfo03 = DbHandler.getUser(3);
-    // displayWithTime(`User03 info: ${JSON.stringify(userInfo03)}`);
-    // console.log("\n");
 
     // launch the API process in the background
     displayWithTime(`Starting API process...`);
@@ -81,10 +76,40 @@ async function main(): Promise<void> {
     console.log("New book response:", newBookResponse);
     console.log("\n");
 
+    // confirm database content for added book
+    const dbBookRecord = DbHandler.getBook(newBookResponse.key);
+    console.log("DB book record:", dbBookRecord);
+    console.log("\n");
+
+    // create new user
+    const newUserName = RandomData.randomPerson();
+    const newUserAddDto = {
+      userEmail: `${newUserName.replace(" ", ".")}@demo.com`,
+      userName: newUserName,
+      password: Config.defaultUserPassword,
+      role: UserRole.Customer,
+      isActive: true,
+      wallet: RandomData.randomDecimal(100, 200),
+    };
+    const newUserResponse = await ApiMessenger.addUser(
+      {
+        userId: Config.adminUserId,
+        password: Config.defaultUserPassword,
+      },
+      newUserAddDto
+    );
+    console.log("New user response:", newUserResponse);
+    console.log("\n");
+
+    // confirm database content for added user
+    const dbUserRecord = DbHandler.getUser(newUserResponse.key);
+    console.log("DB user record:", dbUserRecord.key);
+    console.log("\n");
+
     // create a book review for a added book
     const bookReview = await ApiMessenger.addBookReview(
       {
-        userId: "Savannah.Miller@demo.com",
+        userId: newUserAddDto.userEmail,
         password: Config.defaultUserPassword,
       },
       newBookResponse.key,
