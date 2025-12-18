@@ -15,6 +15,7 @@ import {
   BookReviewDto,
   BookReviewAddDto,
 } from "./interfaces/book-reviews-interface";
+import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
@@ -111,6 +112,19 @@ export const addBookReview = async (
     HttpMethod.POST,
     authRequest,
     reviewAddDto
+  );
+  return response;
+};
+
+export const addBook = async (
+  authRequest: AuthRequest,
+  bookAddDto: BookAddUpdateDto
+): Promise<BookDetailsDto> => {
+  const response: BookDetailsDto = await sendAuthorizedRequest(
+    BOOKS_URI,
+    HttpMethod.POST,
+    authRequest,
+    bookAddDto
   );
   return response;
 };

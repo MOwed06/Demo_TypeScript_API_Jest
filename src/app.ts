@@ -11,6 +11,8 @@ import * as TimeHelper from "./utils/time-helper";
 import * as DbHandler from "./db-handler";
 import * as ApiMessenger from "./api-messenger";
 import { displayWithTime } from "./utils/console-helper";
+import * as RandomData from "./utils/random-data";
+import { Genre } from "./enumerations";
 
 async function main(): Promise<void> {
   try {
@@ -45,13 +47,34 @@ async function main(): Promise<void> {
     );
     console.log("User details response:", userDetails);
 
-    // create a book review for a known book
+    // create a new book
+    const newBookAddDto = {
+      title: `The Adventures of ${RandomData.randomPerson()}`,
+      author: RandomData.randomPerson(),
+      isbn: RandomData.generateGUID(),
+      description: RandomData.randomSentence(),
+      genre: Genre.Fantasy,
+      price: RandomData.randomDecimal(10, 100),
+      stockQuantity: 50,
+    };
+
+    const newBookResponse = await ApiMessenger.addBook(
+      {
+        userId: Config.adminUserId,
+        password: Config.defaultUserPassword,
+      },
+      newBookAddDto
+    );
+    console.log("New book response:", newBookResponse);
+    console.log("\n");
+
+    // create a book review for a added book
     const bookReview = await ApiMessenger.addBookReview(
       {
         userId: "Savannah.Miller@demo.com",
         password: Config.defaultUserPassword,
       },
-      12,
+      newBookResponse.key,
       {
         score: 7,
         isAnonymous: false,
