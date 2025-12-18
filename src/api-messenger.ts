@@ -11,7 +11,10 @@ import * as Config from "./app-config.json";
 import { AuthRequest, AuthResponse } from "./interfaces/auth-interface";
 import { UserDetailsDto } from "./interfaces/account-interface";
 import Logger from "./utils/logger";
-import logger from "./utils/logger";
+import {
+  BookReviewDto,
+  BookReviewAddDto,
+} from "./interfaces/book-reviews-interface";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
@@ -93,6 +96,21 @@ export const getUserDetails = async (
     HttpMethod.GET,
     authRequest,
     null
+  );
+  return response;
+};
+
+export const addBookReview = async (
+  authRequest: AuthRequest,
+  bookKey: number,
+  reviewAddDto: BookReviewAddDto
+): Promise<BookReviewDto> => {
+  const uri = `${BOOKS_URI}/${bookKey}/reviews`;
+  const response: BookReviewDto = await sendAuthorizedRequest(
+    uri,
+    HttpMethod.POST,
+    authRequest,
+    reviewAddDto
   );
   return response;
 };

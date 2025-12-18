@@ -45,6 +45,22 @@ async function main(): Promise<void> {
     );
     console.log("User details response:", userDetails);
 
+    // create a book review for a known book
+    const bookReview = await ApiMessenger.addBookReview(
+      {
+        userId: "Savannah.Miller@demo.com",
+        password: Config.defaultUserPassword,
+      },
+      12,
+      {
+        score: 7,
+        isAnonymous: false,
+        description: "Great book, highly recommend!",
+      }
+    );
+    console.log("Book review response:", bookReview);
+    console.log("\n");
+
     // wait a bit before closing everything
     await TimeHelper.waitSeconds(2);
   } catch (error) {
