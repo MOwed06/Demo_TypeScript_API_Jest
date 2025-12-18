@@ -31,6 +31,7 @@ export function getTimeMSec(timeValue?: Date): string {
   return `${baseTimeString}.${mSecTimeString}`;
 }
 
+// wait for specified number of seconds and add log entry
 export function waitSeconds(timeSec: number): Promise<void> {
   const mSec = timeSec * 1000;
   logger.debug(`Waiting for ${timeSec} seconds...`);

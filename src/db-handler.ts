@@ -3,11 +3,15 @@ import * as Config from "./app-config.json";
 import Logger from "./utils/logger";
 import * as Entities from "./entities/app-user";
 
+const sqlLogger = (message?: unknown, ...additionalArgs: unknown[]) => {
+  Logger.debug(`SQL Query: ${message}`);
+};
+
 const bigBooksDb = new Database(Config.databaseFile, {
   readonly: true, // default is false
   fileMustExist: true, // error if file doesn't exist
   timeout: 5000, // wait up to 5s for locks
-  verbose: console.log, // log all SQL queries
+  verbose: sqlLogger,
 });
 
 export function getUser(key: number) {

@@ -1,31 +1,35 @@
+/**
+ * File: app.ts
+ * Description: demonstration of selected features of the BigBooks API
+ * for more details, refer to: https://github.com/MOwed06/Demo_CSharp_API
+ */
+
 import Logger from "./utils/logger";
 import * as ProcessHandler from "./utils/process-handler";
 import * as Config from "./app-config.json";
 import * as TimeHelper from "./utils/time-helper";
 import * as DbHandler from "./db-handler";
 import * as ApiMessenger from "./api-messenger";
-import * as ConsoleHelper from "./utils/console-helper";
+import { displayWithTime } from "./utils/console-helper";
 
-// application main includes only a basic demonstration
-// of selected features of the BigBooks API
-// refer to the integrationTests folder for more complete examples
 async function main(): Promise<void> {
   try {
-    ConsoleHelper.displayWithTime("Application started");
+    displayWithTime("Application started");
+    console.log();
 
-    // demonstrate database access
+    // demonstrate database access, convert db record to app-user entity
     const userInfo03 = DbHandler.getUser(3);
-    console.log("User info for key=3:", userInfo03);
-    console.log("User Email:", userInfo03.userEmail);
+    displayWithTime(`User03 info: ${JSON.stringify(userInfo03)}`);
+    console.log();
 
     // launch the API process in the background
-    console.log(`${TimeHelper.getTimeMSec()} - Starting API process...`);
-    const processStatus = await ProcessHandler.startProcess(
-      Config.apiRunCommand,
-      Config.apiProjectPath,
-      Config.apiLaunchDelaySec,
-      Config.apiStatusMessage
-    );
+    displayWithTime(`Starting API process...`);
+    const processStatus = await ProcessHandler.startProcess({
+      command: Config.apiRunCommand,
+      path: Config.apiProjectPath,
+      delaySec: Config.apiLaunchDelaySec,
+      confirmationText: Config.apiStatusMessage,
+    });
 
     console.log(
       `${TimeHelper.getTimeMSec()} - API launched, Status: ${processStatus}`
@@ -49,9 +53,9 @@ async function main(): Promise<void> {
     console.error(`Fatal error in main: ${error}`);
   } finally {
     // close things nicely ++++++++++++++++++++++++++++++++++++++++++++++++++++
-    ConsoleHelper.displayWithTime("Closing background process");
+    displayWithTime("Closing background process");
     ProcessHandler.endProcess();
-    ConsoleHelper.displayWithTime("Application exiting");
+    displayWithTime("Application exiting");
   }
 }
 
