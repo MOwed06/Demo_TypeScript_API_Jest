@@ -46,12 +46,12 @@ describe("DTO get operations match Database entities", () => {
         GENTLEMEN_MOSCOW_BOOK_KEY
       );
 
-      expect(observedBook.title).toBe(expectedBook.title);
-      expect(observedBook.author).toBe(expectedBook.author);
+      expect(observedBook.data?.title).toBe(expectedBook.title);
+      expect(observedBook.data?.author).toBe(expectedBook.author);
       // must cast to enumeration to string for apples-to-apples comparison
       const expectedGenreString = Genre[expectedBook.genre];
-      expect(observedBook.genre).toBe(expectedGenreString);
-      expect(observedBook.isbn).toBe(expectedBook.isbn);
+      expect(observedBook.data?.genre).toBe(expectedGenreString);
+      expect(observedBook.data?.isbn).toBe(expectedBook.isbn);
     },
     TestConfig.longTestTimeout
   );
@@ -70,12 +70,12 @@ describe("DTO get operations match Database entities", () => {
         },
         ANDERSON_USER_KEY
       );
-      expect(observedUser.userEmail).toBe(expectedUser.userEmail);
-      expect(observedUser.isActive).toBe(expectedUser.isActive);
+      expect(observedUser.data?.userEmail).toBe(expectedUser.userEmail);
+      expect(observedUser.data?.isActive).toBe(expectedUser.isActive);
       const expectedRoleString = UserRole[expectedUser.role];
-      expect(observedUser.role).toBe(expectedRoleString);
+      expect(observedUser.data?.role).toBe(expectedRoleString);
       const expectedWalletString = StringHelper.toUSD(expectedUser.wallet);
-      expect(observedUser.wallet).toBe(expectedWalletString);
+      expect(observedUser.data?.wallet).toBe(expectedWalletString);
     },
     TestConfig.longTestTimeout
   );
