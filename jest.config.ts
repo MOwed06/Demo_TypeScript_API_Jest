@@ -1,4 +1,5 @@
 import type { Config } from "@jest/types";
+import * as TimeHelper from "./src/utils/time-helper";
 
 const config: Config.InitialOptions = {
   preset: "ts-jest",
@@ -21,7 +22,10 @@ const config: Config.InitialOptions = {
     "default",
     [
       "jest-junit",
-      { outputDirectory: "test/test-results", outputName: "junit.xml" },
+      {
+        outputDirectory: "test/test-results",
+        outputName: `results-${TimeHelper.getFormattedDateTime()}.xml`,
+      },
     ],
   ],
 };
