@@ -13,11 +13,6 @@ const config: Config.InitialOptions = {
     "^@tests/(.*)$": "<rootDir>/tests/$1",
   },
   testMatch: ["<rootDir>/**/*.test.(ts|tsx|js|jsx)"],
-  globals: {
-    "ts-jest": {
-      tsconfig: "tsconfig.json",
-    },
-  },
   reporters: [
     "default",
     [
