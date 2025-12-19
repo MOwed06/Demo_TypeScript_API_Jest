@@ -9,7 +9,8 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
-import { Genre } from "../../src/enumerations";
+import { Genre, UserRole } from "../../src/enumerations";
+import * as StringHelper from "../../src/utils/string-helper";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
@@ -29,9 +30,9 @@ beforeAll(async () => {
 // The DTO objects returned by API calls are related to
 // but separate from the database entities.
 // This suite confirms the validity of the DTO objects.
-describe("DTO get operations", () => {
+describe("DTO get operations match Database entities", () => {
   test(
-    "get book matches book entity",
+    "BookDetailsDto matches Book entity",
     async () => {
       Logger.info(test.name);
       const GENTLEMEN_MOSCOW_BOOK_KEY = 6;
@@ -45,25 +46,36 @@ describe("DTO get operations", () => {
         GENTLEMEN_MOSCOW_BOOK_KEY
       );
 
-      Logger.debug(expectedBook.title);
-      Logger.debug(observedBook.title);
       expect(observedBook.title).toBe(expectedBook.title);
       expect(observedBook.author).toBe(expectedBook.author);
       // must cast to enumeration to string for apples-to-apples comparison
       const expectedGenreString = Genre[expectedBook.genre];
       expect(observedBook.genre).toBe(expectedGenreString);
-      Logger.debug(expectedBook.isbn);
-      Logger.debug(observedBook.isbn);
       expect(observedBook.isbn).toBe(expectedBook.isbn);
     },
     TestConfig.longTestTimeout
   );
 
   test(
-    "test 102",
-    () => {
-      Logger.info("Running test 102");
-      expect(true).toBe(true);
+    "UserDetailsDto matches AppUser entity",
+    async () => {
+      Logger.info(test.name);
+      const ANDERSON_USER_KEY = 4;
+
+      const expectedUser = DbHandler.getUser(ANDERSON_USER_KEY);
+      const observedUser = await ApiMessenger.getUserDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+      expect(observedUser.userEmail).toBe(expectedUser.userEmail);
+      expect(observedUser.isActive).toBe(expectedUser.isActive);
+      const expectedRoleString = UserRole[expectedUser.role];
+      expect(observedUser.role).toBe(expectedRoleString);
+      const expectedWalletString = StringHelper.toUSD(expectedUser.wallet);
+      expect(observedUser.wallet).toBe(expectedWalletString);
     },
     TestConfig.longTestTimeout
   );
@@ -71,7 +83,7 @@ describe("DTO get operations", () => {
 
 describe("Big books integration suite 2", () => {
   test(
-    "test 201",
+    "dsafadsf",
     () => {
       Logger.info("Running test 201");
       expect(true).toBe(true);

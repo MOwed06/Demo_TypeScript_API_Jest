@@ -32,6 +32,22 @@ async function main(): Promise<void> {
       `${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`
     );
 
+    // TODO ~ remove this
+
+    const response1 = await ApiMessenger.requestAuthorization({
+      userId: Config.adminUserId,
+      password: Config.defaultUserPassword,
+    });
+    console.log("Authorization response:", response1);
+    console.log("\n");
+
+    const response2 = await ApiMessenger.requestAuthorization({
+      userId: "somebugy@demo.com",
+      password: Config.defaultUserPassword,
+    });
+    console.log("Authorization response:", response2);
+    console.log("\n");
+
     // demonstrate get user details for known user
     const ANDERSON_USER_KEY = 4;
     const userDetails = await ApiMessenger.getUserDetails(

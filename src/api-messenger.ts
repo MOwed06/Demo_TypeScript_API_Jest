@@ -19,6 +19,8 @@ import {
   BookReviewAddDto,
 } from "./interfaces/book-reviews-interface";
 import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
+import { ApiResponse } from "./interfaces/apiResponse";
+import { HttpStatus } from "./enumerations";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
@@ -33,6 +35,7 @@ enum HttpMethod {
   PATCH = "PATCH",
 }
 
+// send authorization request and return the raw response
 export const transmitAuthorizationRequest = async (
   authRequest: AuthRequest
 ): Promise<Response> => {
@@ -49,6 +52,7 @@ export const transmitAuthorizationRequest = async (
   return await fetch(AUTH_URI, request);
 };
 
+// send authorization request and return the parsed response
 export const sendAuthorizationRequest = async (
   authRequest: AuthRequest
 ): Promise<AuthResponse> => {
@@ -61,12 +65,48 @@ export const sendAuthorizationRequest = async (
   return (await response.json()) as AuthResponse;
 };
 
-const sendAuthorizedRequest = async <T>(
+export const requestAuthorization = async (
+  authRequest: AuthRequest
+): Promise<ApiResponse<AuthResponse>> => {
+  const messageHeader = new Headers();
+  messageHeader.append("Content-Type", "application/json");
+
+  const request: RequestInit = {
+    method: HttpMethod.POST,
+    headers: messageHeader,
+    body: JSON.stringify(authRequest),
+    redirect: "follow",
+  };
+
+  const response = await fetch(AUTH_URI, request);
+
+  if (!response.ok) {
+    Logger.debug(`Auth request: ${response.status} - ${authRequest.userId}`);
+    return {
+      status: response.status as HttpStatus,
+      data: undefined,
+      error: await response.text(),
+    } as ApiResponse<AuthResponse>;
+  }
+
+  // healthy response
+  Logger.trace(`Auth request: ${response.status} - ${authRequest.userId}`);
+  const authResponse = (await response.json()) as AuthResponse;
+
+  return {
+    status: response.status as HttpStatus,
+    data: authResponse,
+    error: "",
+  } as ApiResponse<AuthResponse>;
+};
+
+// get token and transmit authorized request, returning raw response
+const transmitAuthorizedRequest = async <T>(
   uri: string,
   method: HttpMethod,
   authRequest: AuthRequest,
   body?: any
-): Promise<T> => {
+): Promise<Response> => {
   const authResponse = await sendAuthorizationRequest(authRequest);
 
   const messageHeader = new Headers();
@@ -80,7 +120,22 @@ const sendAuthorizedRequest = async <T>(
     body: body ? JSON.stringify(body) : undefined,
   };
 
-  const response = await fetch(uri, request);
+  return await fetch(uri, request);
+};
+
+// get token, transmit authorized request, and return parsed response
+const sendAuthorizedRequest = async <T>(
+  uri: string,
+  method: HttpMethod,
+  authRequest: AuthRequest,
+  body?: any
+): Promise<T> => {
+  const response = await transmitAuthorizedRequest<T>(
+    uri,
+    method,
+    authRequest,
+    body
+  );
   if (!response.ok) {
     Logger.info(`request: ${response.status} - ${uri}`);
   }
