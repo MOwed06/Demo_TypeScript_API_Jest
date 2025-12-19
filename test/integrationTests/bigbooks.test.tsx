@@ -9,6 +9,7 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
+import { Genre } from "../../src/enumerations";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
@@ -48,7 +49,8 @@ describe("DTO get operations", () => {
       Logger.debug(observedBook.title);
       expect(observedBook.title).toBe(expectedBook.title);
       expect(observedBook.author).toBe(expectedBook.author);
-      expect(observedBook.genre).toBe(expectedBook.genre);
+      // API returns genre as string name, DB stores as numeric enum value
+      expect(observedBook.genre).toBe(Genre[expectedBook.genre]);
       expect(observedBook.isbn).toBe(expectedBook.isbn);
     },
     TestConfig.longTestTimeout
