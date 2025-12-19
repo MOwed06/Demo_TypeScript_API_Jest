@@ -19,7 +19,7 @@ let testCertificate: SelfSignedCertificate;
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
-  AppConfig.apiLaunchDelaySec * 1000 + 2000;
+  AppConfig.apiLaunchDelaySec * 1000 + 5000;
 
 // launch BigBooks server before tests
 beforeAll(async () => {
@@ -29,6 +29,8 @@ beforeAll(async () => {
     "BigBooks Test API",
     1
   );
+
+  await new Promise((resolve) => setTimeout(resolve, 2000));
 
   Logger.info("Generated self-signed certificate for secure API testing");
   Logger.debug(
@@ -73,7 +75,10 @@ describe("DTO get operations", () => {
 
         Logger.debug(expectedBook.title);
         Logger.debug(observedBook.title);
-        expect(observedBook).toBeDefined();
+        expect(observedBook.title).toBe(expectedBook.title);
+        expect(observedBook.author).toBe(expectedBook.author);
+        expect(observedBook.genre).toBe(expectedBook.genre);
+        expect(observedBook.isbn).toBe(expectedBook.isbn);
       } catch (error) {
         Logger.warn(`API connection failed: ${error}`);
         Logger.info(
