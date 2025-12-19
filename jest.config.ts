@@ -17,6 +17,13 @@ const config: Config.InitialOptions = {
       tsconfig: "tsconfig.json",
     },
   },
+  reporters: [
+    "default",
+    [
+      "jest-junit",
+      { outputDirectory: "test/test-results", outputName: "junit.xml" },
+    ],
+  ],
 };
 
 export default config;
