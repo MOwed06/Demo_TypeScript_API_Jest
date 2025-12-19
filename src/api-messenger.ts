@@ -35,36 +35,37 @@ enum HttpMethod {
   PATCH = "PATCH",
 }
 
-// send authorization request and return the raw response
-export const transmitAuthorizationRequest = async (
-  authRequest: AuthRequest
-): Promise<Response> => {
-  const messageHeader = new Headers();
-  messageHeader.append("Content-Type", "application/json");
+// // send authorization request and return the raw response
+// export const transmitAuthorizationRequest = async (
+//   authRequest: AuthRequest
+// ): Promise<Response> => {
+//   const messageHeader = new Headers();
+//   messageHeader.append("Content-Type", "application/json");
 
-  const request: RequestInit = {
-    method: HttpMethod.POST,
-    headers: messageHeader,
-    body: JSON.stringify(authRequest),
-    redirect: "follow",
-  };
+//   const request: RequestInit = {
+//     method: HttpMethod.POST,
+//     headers: messageHeader,
+//     body: JSON.stringify(authRequest),
+//     redirect: "follow",
+//   };
 
-  return await fetch(AUTH_URI, request);
-};
+//   return await fetch(AUTH_URI, request);
+// };
 
-// send authorization request and return the parsed response
-export const sendAuthorizationRequest = async (
-  authRequest: AuthRequest
-): Promise<AuthResponse> => {
-  const response = await transmitAuthorizationRequest(authRequest);
+// // send authorization request and return the parsed response
+// export const sendAuthorizationRequest = async (
+//   authRequest: AuthRequest
+// ): Promise<AuthResponse> => {
+//   const response = await transmitAuthorizationRequest(authRequest);
 
-  if (!response.ok) {
-    Logger.info(`Auth request: ${response.status} - ${authRequest.userId}`);
-  }
+//   if (!response.ok) {
+//     Logger.info(`Auth request: ${response.status} - ${authRequest.userId}`);
+//   }
 
-  return (await response.json()) as AuthResponse;
-};
+//   return (await response.json()) as AuthResponse;
+// };
 
+// send authorization request and return full API response
 export const requestAuthorization = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<AuthResponse>> => {
@@ -100,18 +101,26 @@ export const requestAuthorization = async (
   } as ApiResponse<AuthResponse>;
 };
 
-// get token and transmit authorized request, returning raw response
-const transmitAuthorizedRequest = async <T>(
+export const transmitRequest = async <T>(
   uri: string,
   method: HttpMethod,
   authRequest: AuthRequest,
   body?: any
-): Promise<Response> => {
-  const authResponse = await sendAuthorizationRequest(authRequest);
+): Promise<ApiResponse<T>> => {
+  const authResponse = await requestAuthorization(authRequest);
+
+  // authorization failed
+  if (authResponse.status !== HttpStatus.OK || !authResponse.data) {
+    return {
+      status: authResponse.status,
+      data: undefined,
+      error: authResponse.error,
+    } as ApiResponse<T>;
+  }
 
   const messageHeader = new Headers();
   messageHeader.append("Content-Type", "application/json");
-  messageHeader.append("Authorization", `Bearer ${authResponse.token}`);
+  messageHeader.append("Authorization", `Bearer ${authResponse.data.token}`);
 
   const request: RequestInit = {
     method: method,
@@ -120,94 +129,166 @@ const transmitAuthorizedRequest = async <T>(
     body: body ? JSON.stringify(body) : undefined,
   };
 
-  return await fetch(uri, request);
-};
+  const response = await fetch(uri, request);
 
-// get token, transmit authorized request, and return parsed response
-const sendAuthorizedRequest = async <T>(
-  uri: string,
-  method: HttpMethod,
-  authRequest: AuthRequest,
-  body?: any
-): Promise<T> => {
-  const response = await transmitAuthorizedRequest<T>(
-    uri,
-    method,
-    authRequest,
-    body
-  );
   if (!response.ok) {
-    Logger.info(`request: ${response.status} - ${uri}`);
+    Logger.debug(`request: ${response.status} - ${uri}`);
+    return {
+      status: response.status as HttpStatus,
+      data: undefined,
+      error: await response.text(),
+    } as ApiResponse<T>;
   }
 
-  return (await response.json()) as T;
+  // healthy response
+  Logger.trace(`request: ${response.status} - ${uri}`);
+  const responseData = (await response.json()) as T;
+
+  return {
+    status: response.status as HttpStatus,
+    data: responseData,
+    error: "",
+  } as ApiResponse<T>;
 };
+
+// // get token and transmit authorized request, returning raw response
+// const transmitAuthorizedRequest = async <T>(
+//   uri: string,
+//   method: HttpMethod,
+//   authRequest: AuthRequest,
+//   body?: any
+// ): Promise<Response> => {
+//   const authResponse = await sendAuthorizationRequest(authRequest);
+
+//   const messageHeader = new Headers();
+//   messageHeader.append("Content-Type", "application/json");
+//   messageHeader.append("Authorization", `Bearer ${authResponse.token}`);
+
+//   const request: RequestInit = {
+//     method: method,
+//     headers: messageHeader,
+//     redirect: "follow",
+//     body: body ? JSON.stringify(body) : undefined,
+//   };
+
+//   return await fetch(uri, request);
+// };
+
+// // get token, transmit authorized request, and return parsed response
+// const sendAuthorizedRequest = async <T>(
+//   uri: string,
+//   method: HttpMethod,
+//   authRequest: AuthRequest,
+//   body?: any
+// ): Promise<T> => {
+//   const response = await transmitAuthorizedRequest<T>(
+//     uri,
+//     method,
+//     authRequest,
+//     body
+//   );
+//   if (!response.ok) {
+//     Logger.info(`request: ${response.status} - ${uri}`);
+//   }
+
+//   return (await response.json()) as T;
+// };
 
 export const getUserDetails = async (
   authRequest: AuthRequest,
   key: number
-): Promise<UserDetailsDto> => {
+): Promise<ApiResponse<UserDetailsDto>> => {
   const uri = `${ACCOUNTS_URI}/${key}`;
-  const response: UserDetailsDto = await sendAuthorizedRequest(
+  // const response: ApiResponse<UserDetailsDto> = await transmitRequest(
+  //   uri,
+  //   HttpMethod.GET,
+  //   authRequest,
+  //   null
+  // );
+  // return response;
+  return await transmitRequest<UserDetailsDto>(
     uri,
     HttpMethod.GET,
     authRequest,
     null
   );
-  return response;
 };
 
 export const addBookReview = async (
   authRequest: AuthRequest,
   bookKey: number,
   reviewAddDto: BookReviewAddDto
-): Promise<BookReviewDto> => {
+): Promise<ApiResponse<BookReviewDto>> => {
   const uri = `${BOOKS_URI}/${bookKey}/reviews`;
-  const response: BookReviewDto = await sendAuthorizedRequest(
+  // const response: BookReviewDto = await sendAuthorizedRequest(
+  //   uri,
+  //   HttpMethod.POST,
+  //   authRequest,
+  //   reviewAddDto
+  // );
+  // return response;
+  return await transmitRequest<BookReviewDto>(
     uri,
     HttpMethod.POST,
     authRequest,
     reviewAddDto
   );
-  return response;
 };
 
 export const addBook = async (
   authRequest: AuthRequest,
   bookAddDto: BookAddUpdateDto
-): Promise<BookDetailsDto> => {
-  const response: BookDetailsDto = await sendAuthorizedRequest(
+): Promise<ApiResponse<BookDetailsDto>> => {
+  // const response: BookDetailsDto = await sendAuthorizedRequest(
+  //   BOOKS_URI,
+  //   HttpMethod.POST,
+  //   authRequest,
+  //   bookAddDto
+  // );
+  // return response;
+  return await transmitRequest<BookDetailsDto>(
     BOOKS_URI,
     HttpMethod.POST,
     authRequest,
     bookAddDto
   );
-  return response;
 };
 
 export const getBookDetails = async (
   authRequest: AuthRequest,
   bookKey: number
-): Promise<BookDetailsDto> => {
+): Promise<ApiResponse<BookDetailsDto>> => {
   const uri = `${BOOKS_URI}/${bookKey}`;
-  const response: BookDetailsDto = await sendAuthorizedRequest(
+  // const response: BookDetailsDto = await sendAuthorizedRequest(
+  //   uri,
+  //   HttpMethod.GET,
+  //   authRequest,
+  //   null
+  // );
+  // return response;
+  return await transmitRequest<BookDetailsDto>(
     uri,
     HttpMethod.GET,
     authRequest,
     null
   );
-  return response;
 };
 
 export const addUser = async (
   authRequest: AuthRequest,
   userDto: UserAddUpdateDto
-): Promise<UserDetailsDto> => {
-  const response: UserDetailsDto = await sendAuthorizedRequest(
+): Promise<ApiResponse<UserDetailsDto>> => {
+  // const response: UserDetailsDto = await sendAuthorizedRequest(
+  //   ACCOUNTS_URI,
+  //   HttpMethod.POST,
+  //   authRequest,
+  //   userDto
+  // );
+  // return response;
+  return await transmitRequest<UserDetailsDto>(
     ACCOUNTS_URI,
     HttpMethod.POST,
     authRequest,
     userDto
   );
-  return response;
 };

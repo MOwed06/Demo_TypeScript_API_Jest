@@ -32,20 +32,12 @@ async function main(): Promise<void> {
       `${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`
     );
 
-    // TODO ~ remove this
-
-    const response1 = await ApiMessenger.requestAuthorization({
-      userId: Config.adminUserId,
-      password: Config.defaultUserPassword,
-    });
-    console.log("Authorization response:", response1);
-    console.log("\n");
-
-    const response2 = await ApiMessenger.requestAuthorization({
+    // demonstrate authorization rejected
+    const badResponse = await ApiMessenger.requestAuthorization({
       userId: "somebugy@demo.com",
       password: Config.defaultUserPassword,
     });
-    console.log("Authorization response:", response2);
+    console.log("Authorization response:", badResponse);
     console.log("\n");
 
     // demonstrate get user details for known user
@@ -57,11 +49,11 @@ async function main(): Promise<void> {
       },
       ANDERSON_USER_KEY
     );
-    console.log("User details response:", userDetails);
+    console.log("User details response:", userDetails.data);
 
     // search user details for particular transaction
     const EXPECTED_TRANSACTION_DATE = "2025-03-17";
-    const transactionUserDetails = userDetails.transactions.find((tx) =>
+    const transactionUserDetails = userDetails.data?.transactions.find((tx) =>
       tx.transactionDate.startsWith(EXPECTED_TRANSACTION_DATE)
     );
     // expect book 3 purchased on 2025-03-17
@@ -89,13 +81,17 @@ async function main(): Promise<void> {
       },
       newBookAddDto
     );
-    console.log("New book response:", newBookResponse);
+    console.log("New book response:", newBookResponse.data);
     console.log("\n");
 
     // confirm database content for added book
-    const dbBookRecord = DbHandler.getBook(newBookResponse.key);
-    console.log("DB book record:", dbBookRecord);
-    console.log("\n");
+    if (!newBookResponse?.data?.key) {
+      displayWithTime("ERROR: New book response is missing the book key");
+    } else {
+      const dbBookRecord = DbHandler.getBook(newBookResponse.data.key);
+      console.log("DB book record:", dbBookRecord);
+      console.log("\n");
+    }
 
     // create new user
     const newUserName = RandomData.randomPerson();
@@ -114,29 +110,37 @@ async function main(): Promise<void> {
       },
       newUserAddDto
     );
-    console.log("New user response:", newUserResponse);
+    console.log("New user response:", newUserResponse.data);
     console.log("\n");
 
-    // confirm database content for added user
-    const dbUserRecord = DbHandler.getUser(newUserResponse.key);
-    console.log("DB user record:", dbUserRecord.key);
-    console.log("\n");
+    if (!newUserResponse?.data?.key) {
+      displayWithTime("ERROR: New user response is missing the user key");
+    } else {
+      // confirm database content for added user
+      const dbUserRecord = DbHandler.getUser(newUserResponse.data.key);
+      console.log("DB user record:", dbUserRecord);
+      console.log("\n");
+    }
 
-    // create a book review for a added book
-    const bookReview = await ApiMessenger.addBookReview(
-      {
-        userId: newUserAddDto.userEmail,
-        password: Config.defaultUserPassword,
-      },
-      newBookResponse.key,
-      {
-        score: 7,
-        isAnonymous: false,
-        description: "Great book, highly recommend!",
-      }
-    );
-    console.log("Book review response:", bookReview);
-    console.log("\n");
+    if (!newUserResponse?.data?.key || !newBookResponse?.data?.key) {
+      displayWithTime("ERROR: bad user or bad book key, cannot create review");
+    } else {
+      // create a book review for a added book
+      const bookReview = await ApiMessenger.addBookReview(
+        {
+          userId: newUserAddDto.userEmail,
+          password: Config.defaultUserPassword,
+        },
+        newBookResponse.data.key,
+        {
+          score: 7,
+          isAnonymous: false,
+          description: "Great book, highly recommend!",
+        }
+      );
+      console.log("Book review response:", bookReview.data);
+      console.log("\n");
+    }
 
     // wait a bit before closing everything
     await TimeHelper.waitSeconds(2);
