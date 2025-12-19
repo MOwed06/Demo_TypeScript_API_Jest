@@ -13,6 +13,7 @@ The following features/operations should be noted:
   - request authorization token (GET, /api/authentication/authenticate)
   - get user account details (GET, /api/accounts/#)
   - add user account (POST, /api/accounts)
+  - get book details (GET, /api/books)
   - add book (POST, /api/books)
   - add book review (POST, /api/books/#/reviews)
 - query sqlite database for raw content, refer to ./src/db-handler.ts

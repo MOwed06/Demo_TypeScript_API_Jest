@@ -4,7 +4,6 @@ const config: Config.InitialOptions = {
   preset: "ts-jest",
   testEnvironment: "node",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  globalSetup: "<rootDir>/test/integrationTests/jest.setup.ts",
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",
   },

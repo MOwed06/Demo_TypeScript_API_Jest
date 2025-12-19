@@ -130,6 +130,20 @@ export const addBook = async (
   return response;
 };
 
+export const getBookDetails = async (
+  authRequest: AuthRequest,
+  bookKey: number
+): Promise<BookDetailsDto> => {
+  const uri = `${BOOKS_URI}/${bookKey}`;
+  const response: BookDetailsDto = await sendAuthorizedRequest(
+    uri,
+    HttpMethod.GET,
+    authRequest,
+    null
+  );
+  return response;
+};
+
 export const addUser = async (
   authRequest: AuthRequest,
   userDto: UserAddUpdateDto
