@@ -9,6 +9,7 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
+import { Genre } from "../../src/enumerations";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
@@ -48,12 +49,12 @@ describe("DTO get operations", () => {
       Logger.debug(observedBook.title);
       expect(observedBook.title).toBe(expectedBook.title);
       expect(observedBook.author).toBe(expectedBook.author);
-      Logger.debug(expectedBook.genre.toString());
-      Logger.debug(observedBook.genre.toString());
-      //expect(observedBook.genre).toBe(expectedBook.genre.toString());
+      // must cast to enumeration to string for apples-to-apples comparison
+      const expectedGenreString = Genre[expectedBook.genre];
+      expect(observedBook.genre).toBe(expectedGenreString);
       Logger.debug(expectedBook.isbn);
       Logger.debug(observedBook.isbn);
-      //expect(observedBook.isbn).toBe(expectedBook.isbn);
+      expect(observedBook.isbn).toBe(expectedBook.isbn);
     },
     TestConfig.longTestTimeout
   );

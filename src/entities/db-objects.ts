@@ -42,6 +42,6 @@ export class Book {
     this.genre = data.Genre as Genre;
     this.price = data.Price;
     this.stockQuantity = data.StockQuantity;
-    this.isbn = data.ISBN;
+    this.isbn = data.Isbn;
   }
 }
