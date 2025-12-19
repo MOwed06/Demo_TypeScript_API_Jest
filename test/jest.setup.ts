@@ -1,1 +1,1 @@
-process.env.NODE_EXTRA_CA_CERTS = "my-cert.pem";
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";

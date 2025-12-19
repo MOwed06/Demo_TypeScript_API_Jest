@@ -4,7 +4,7 @@
   "description": "",
   "main": "./dist/app.js",
   "scripts": {
-    "test": "jest",
+    "test": "cross-env NODE_TLS_REJECT_UNAUTHORIZED=0 jest",
     "lint": "eslint \"src/**/*.{ts,js}\"",
     "lint:fix": "eslint \"src/**/*.{ts,js}\" --fix",
     "format": "prettier --write \"src/**/*.{ts,js,json,md}\"",
@@ -21,6 +21,7 @@
     "@types/node": "^25.0.2",
     "@typescript-eslint/eslint-plugin": "^8.49.0",
     "@typescript-eslint/parser": "^8.49.0",
+    "cross-env": "^10.1.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-prettier": "^5.5.4",
