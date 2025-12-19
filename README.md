@@ -4,12 +4,17 @@ This project is a playground to demonstrate selected TypeScript operations inclu
 
 This project is linked to the BigBooks web api project I created here: https://github.com/MOwed06/Demo_CSharp_API
 
-The following features/operations should be noted:
+<br>
+
+## Application
+
+The application is a brief exercise of a sampling of the operations of the BigBooks api. The following features of the application should be noted:
 
 - spawn the BigBooks api project as a background task
   - refer to ./src/utils/process-handler.ts
   - read api output to confirm health of background task
-- interface with BigBooks api, refer to ./src/api-messenger.ts
+- api-messenger.ts is the core of the project
+  - api responses are wrapped in ApiResponse interface to simplify access to full properties of message exchange
   - request authorization token (GET, /api/authentication/authenticate)
   - get user account details (GET, /api/accounts/#)
   - add user account (POST, /api/accounts)
@@ -18,3 +23,13 @@ The following features/operations should be noted:
   - add book review (POST, /api/books/#/reviews)
 - query sqlite database for raw content, refer to ./src/db-handler.ts
 - verbose logging is output to timestamped log files in /logs subdirectory
+
+<br>
+
+## Test
+
+By design, test included in this project is _not_ a unit of the project. It is an integtration-level exercise of BigBooks API.
+
+more details coming soon ...
+
+npm test

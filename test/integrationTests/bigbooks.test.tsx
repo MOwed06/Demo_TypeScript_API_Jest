@@ -9,7 +9,7 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
-import { Genre, UserRole } from "../../src/enumerations";
+import { Genre, HttpStatus, UserRole } from "../../src/enumerations";
 import * as StringHelper from "../../src/utils/string-helper";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
@@ -34,7 +34,7 @@ describe("DTO get operations match Database entities", () => {
   test(
     "BookDetailsDto matches Book entity",
     async () => {
-      Logger.info(test.name);
+      Logger.info(expect.getState().currentTestName);
       const GENTLEMEN_MOSCOW_BOOK_KEY = 6;
 
       const expectedBook = DbHandler.getBook(GENTLEMEN_MOSCOW_BOOK_KEY);
@@ -59,7 +59,7 @@ describe("DTO get operations match Database entities", () => {
   test(
     "UserDetailsDto matches AppUser entity",
     async () => {
-      Logger.info(test.name);
+      Logger.info(expect.getState().currentTestName);
       const ANDERSON_USER_KEY = 4;
 
       const expectedUser = DbHandler.getUser(ANDERSON_USER_KEY);
@@ -81,31 +81,61 @@ describe("DTO get operations match Database entities", () => {
   );
 });
 
-describe("Big books integration suite 2", () => {
+describe("Access errors", () => {
   test(
-    "dsafadsf",
-    () => {
-      Logger.info("Running test 201");
-      expect(true).toBe(true);
-    },
-    TestConfig.longTestTimeout
-  );
-
-  test(
-    "test 202",
-    () => {
-      Logger.info("Running test 202");
-      expect(true).toBe(true);
-    },
-    TestConfig.longTestTimeout
-  );
-
-  test(
-    "test 203",
+    "Invalid User, Authorization Rejected",
     async () => {
-      Logger.info("Running test 203 with delay");
-      await new Promise((resolve) => setTimeout(resolve, 5000));
-      expect(true).toBe(true);
+      Logger.info(expect.getState().currentTestName);
+      const ANDERSON_USER_KEY = 4;
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: "user.unknown@demo.com",
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+
+      expect(response.status).toBe(HttpStatus.Unauthorized);
+      expect(response.error).toContain("User not found");
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Invalid Password - Authorization Rejected",
+    async () => {
+      Logger.info(expect.getState().currentTestName);
+      const ANDERSON_USER_KEY = 4;
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: "wrongpassword",
+        },
+        ANDERSON_USER_KEY
+      );
+
+      expect(response.status).toBe(HttpStatus.Unauthorized);
+      expect(response.error).toContain("Invalid password");
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Authorization Rejection - User Details Access Denied",
+    async () => {
+      Logger.info(expect.getState().currentTestName);
+      // a user cannot access details of another user account
+      const ANDERSON_USER_KEY = 4;
+      const VALID_CUSTOMER_EMAIL = "Savannah.Tucker@demo.com";
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: VALID_CUSTOMER_EMAIL,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+
+      expect(response.status).toBe(HttpStatus.Forbidden);
     },
     TestConfig.longTestTimeout
   );

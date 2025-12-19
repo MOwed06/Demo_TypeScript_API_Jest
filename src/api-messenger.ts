@@ -19,7 +19,7 @@ import {
   BookReviewAddDto,
 } from "./interfaces/book-reviews-interface";
 import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
-import { ApiResponse } from "./interfaces/apiResponse";
+import { ApiResponse } from "./interfaces/api-response";
 import { HttpStatus } from "./enumerations";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
