@@ -9,13 +9,6 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
-import {
-  SelfSignedCertificate,
-  generateSelfSignedCertificate,
-} from "../utils/certificate-builder";
-
-// Store generated certificate for tests
-let testCertificate: SelfSignedCertificate;
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
@@ -23,24 +16,6 @@ const BACKGROUND_APP_LAUNCH_DELAY_MS =
 
 // launch BigBooks server before tests
 beforeAll(async () => {
-  // Generate self-signed certificate for HTTPS testing
-  testCertificate = generateSelfSignedCertificate(
-    "localhost",
-    "BigBooks Test API",
-    1
-  );
-
-  await new Promise((resolve) => setTimeout(resolve, 2000));
-
-  Logger.info("Generated self-signed certificate for secure API testing");
-  Logger.debug(
-    `Certificate Serial: ${testCertificate.certificate.match(/Serial: ([a-f0-9]+)/)?.[1]}`
-  );
-  Logger.debug(
-    `Private Key Length: ${testCertificate.privateKey.length} bytes`
-  );
-  Logger.debug(`Public Key Length: ${testCertificate.publicKey.length} bytes`);
-
   const processStatus = await ProcessHandler.startProcess({
     command: AppConfig.apiRunCommand,
     path: AppConfig.apiProjectPath,
@@ -48,9 +23,6 @@ beforeAll(async () => {
     confirmationText: AppConfig.apiStatusMessage,
   });
   Logger.info(`BigBooks API launched, Healthy: ${processStatus}`);
-  Logger.info(
-    `Certificate ready for ${testCertificate.certificate.match(/Subject: (.+)/)?.[1]}`
-  );
 }, BACKGROUND_APP_LAUNCH_DELAY_MS);
 
 // The DTO objects returned by API calls are related to
@@ -63,31 +35,21 @@ describe("DTO get operations", () => {
       Logger.info(test.name);
       const GENTLEMEN_MOSCOW_BOOK_KEY = 6;
 
-      try {
-        const expectedBook = DbHandler.getBook(GENTLEMEN_MOSCOW_BOOK_KEY);
-        const observedBook = await ApiMessenger.getBookDetails(
-          {
-            userId: AppConfig.adminUserId,
-            password: AppConfig.defaultUserPassword,
-          },
-          GENTLEMEN_MOSCOW_BOOK_KEY
-        );
+      const expectedBook = DbHandler.getBook(GENTLEMEN_MOSCOW_BOOK_KEY);
+      const observedBook = await ApiMessenger.getBookDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        GENTLEMEN_MOSCOW_BOOK_KEY
+      );
 
-        Logger.debug(expectedBook.title);
-        Logger.debug(observedBook.title);
-        expect(observedBook.title).toBe(expectedBook.title);
-        expect(observedBook.author).toBe(expectedBook.author);
-        expect(observedBook.genre).toBe(expectedBook.genre);
-        expect(observedBook.isbn).toBe(expectedBook.isbn);
-      } catch (error) {
-        Logger.warn(`API connection failed: ${error}`);
-        Logger.info(
-          "Certificate is available and valid for when API is running"
-        );
-        // Test passes if certificate was generated successfully
-        expect(testCertificate).toBeDefined();
-        expect(testCertificate.certificate).toContain("CN=localhost");
-      }
+      Logger.debug(expectedBook.title);
+      Logger.debug(observedBook.title);
+      expect(observedBook.title).toBe(expectedBook.title);
+      expect(observedBook.author).toBe(expectedBook.author);
+      expect(observedBook.genre).toBe(expectedBook.genre);
+      expect(observedBook.isbn).toBe(expectedBook.isbn);
     },
     TestConfig.longTestTimeout
   );

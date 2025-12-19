@@ -152,3 +152,6 @@ CopilotIndices/
 
 # Jest test Output
 */test-results/*.*
+
+# certificates
+*.pem

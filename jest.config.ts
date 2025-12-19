@@ -23,6 +23,7 @@ const config: Config.InitialOptions = {
       },
     ],
   ],
+  setupFiles: ["./test/jest.setup.ts"],
 };
 
 export default config;
