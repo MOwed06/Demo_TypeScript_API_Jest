@@ -149,3 +149,9 @@ CopilotIndices/
 */VSWorkspaceState.json
 *.slnx.sqlite
 *.vs/slnx.sqlite-journal
+
+# Jest test Output
+*/test-results/*.*
+
+# certificates
+*.pem

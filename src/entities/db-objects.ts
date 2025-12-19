@@ -17,7 +17,7 @@ export class AppUser {
     this.userEmail = data.UserEmail;
     this.userName = data.UserName;
     this.password = data.Password;
-    this.isActive = data.IsActive;
+    this.isActive = data.IsActive === 1;
     this.wallet = data.Wallet;
   }
 }
@@ -42,6 +42,6 @@ export class Book {
     this.genre = data.Genre as Genre;
     this.price = data.Price;
     this.stockQuantity = data.StockQuantity;
-    this.isbn = data.ISBN;
+    this.isbn = data.Isbn;
   }
 }

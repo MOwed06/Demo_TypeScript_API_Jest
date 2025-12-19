@@ -19,6 +19,8 @@ import {
   BookReviewAddDto,
 } from "./interfaces/book-reviews-interface";
 import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
+import { ApiResponse } from "./interfaces/api-response";
+import { HttpStatus } from "./enumerations";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
@@ -33,9 +35,10 @@ enum HttpMethod {
   PATCH = "PATCH",
 }
 
-export const transmitAuthorizationRequest = async (
+// send authorization request and return full API response
+export const requestAuthorization = async (
   authRequest: AuthRequest
-): Promise<Response> => {
+): Promise<ApiResponse<AuthResponse>> => {
   const messageHeader = new Headers();
   messageHeader.append("Content-Type", "application/json");
 
@@ -46,32 +49,48 @@ export const transmitAuthorizationRequest = async (
     redirect: "follow",
   };
 
-  return await fetch(AUTH_URI, request);
-};
-
-export const sendAuthorizationRequest = async (
-  authRequest: AuthRequest
-): Promise<AuthResponse> => {
-  const response = await transmitAuthorizationRequest(authRequest);
+  const response = await fetch(AUTH_URI, request);
 
   if (!response.ok) {
-    Logger.info(`Auth request: ${response.status} - ${authRequest.userId}`);
+    Logger.debug(`Auth request: ${response.status} - ${authRequest.userId}`);
+    return {
+      status: response.status as HttpStatus,
+      data: undefined,
+      error: await response.text(),
+    } as ApiResponse<AuthResponse>;
   }
 
-  return (await response.json()) as AuthResponse;
+  // healthy response
+  Logger.trace(`Auth request: ${response.status} - ${authRequest.userId}`);
+  const authResponse = (await response.json()) as AuthResponse;
+
+  return {
+    status: response.status as HttpStatus,
+    data: authResponse,
+    error: "",
+  } as ApiResponse<AuthResponse>;
 };
 
-const sendAuthorizedRequest = async <T>(
+export const transmitRequest = async <T>(
   uri: string,
   method: HttpMethod,
   authRequest: AuthRequest,
   body?: any
-): Promise<T> => {
-  const authResponse = await sendAuthorizationRequest(authRequest);
+): Promise<ApiResponse<T>> => {
+  const authResponse = await requestAuthorization(authRequest);
+
+  // authorization failed
+  if (authResponse.status !== HttpStatus.OK || !authResponse.data) {
+    return {
+      status: authResponse.status,
+      data: undefined,
+      error: authResponse.error,
+    } as ApiResponse<T>;
+  }
 
   const messageHeader = new Headers();
   messageHeader.append("Content-Type", "application/json");
-  messageHeader.append("Authorization", `Bearer ${authResponse.token}`);
+  messageHeader.append("Authorization", `Bearer ${authResponse.data.token}`);
 
   const request: RequestInit = {
     method: method,
@@ -81,64 +100,87 @@ const sendAuthorizedRequest = async <T>(
   };
 
   const response = await fetch(uri, request);
+
   if (!response.ok) {
-    Logger.info(`request: ${response.status} - ${uri}`);
+    Logger.debug(`request: ${response.status} - ${uri}`);
+    return {
+      status: response.status as HttpStatus,
+      data: undefined,
+      error: await response.text(),
+    } as ApiResponse<T>;
   }
 
-  return (await response.json()) as T;
+  // healthy response
+  Logger.trace(`request: ${response.status} - ${uri}`);
+  const responseData = (await response.json()) as T;
+
+  return {
+    status: response.status as HttpStatus,
+    data: responseData,
+    error: "",
+  } as ApiResponse<T>;
 };
 
 export const getUserDetails = async (
   authRequest: AuthRequest,
   key: number
-): Promise<UserDetailsDto> => {
+): Promise<ApiResponse<UserDetailsDto>> => {
   const uri = `${ACCOUNTS_URI}/${key}`;
-  const response: UserDetailsDto = await sendAuthorizedRequest(
+  return await transmitRequest<UserDetailsDto>(
     uri,
     HttpMethod.GET,
     authRequest,
     null
   );
-  return response;
 };
 
 export const addBookReview = async (
   authRequest: AuthRequest,
   bookKey: number,
   reviewAddDto: BookReviewAddDto
-): Promise<BookReviewDto> => {
+): Promise<ApiResponse<BookReviewDto>> => {
   const uri = `${BOOKS_URI}/${bookKey}/reviews`;
-  const response: BookReviewDto = await sendAuthorizedRequest(
+  return await transmitRequest<BookReviewDto>(
     uri,
     HttpMethod.POST,
     authRequest,
     reviewAddDto
   );
-  return response;
 };
 
 export const addBook = async (
   authRequest: AuthRequest,
   bookAddDto: BookAddUpdateDto
-): Promise<BookDetailsDto> => {
-  const response: BookDetailsDto = await sendAuthorizedRequest(
+): Promise<ApiResponse<BookDetailsDto>> => {
+  return await transmitRequest<BookDetailsDto>(
     BOOKS_URI,
     HttpMethod.POST,
     authRequest,
     bookAddDto
   );
-  return response;
+};
+
+export const getBookDetails = async (
+  authRequest: AuthRequest,
+  bookKey: number
+): Promise<ApiResponse<BookDetailsDto>> => {
+  const uri = `${BOOKS_URI}/${bookKey}`;
+  return await transmitRequest<BookDetailsDto>(
+    uri,
+    HttpMethod.GET,
+    authRequest,
+    null
+  );
 };
 
 export const addUser = async (
   authRequest: AuthRequest,
   userDto: UserAddUpdateDto
-): Promise<UserDetailsDto> => {
-  const response: UserDetailsDto = await sendAuthorizedRequest(
+): Promise<ApiResponse<UserDetailsDto>> => {
+  return await transmitRequest<UserDetailsDto>(
     ACCOUNTS_URI,
     HttpMethod.POST,
     authRequest,
     userDto
   );
-  return response;
 };

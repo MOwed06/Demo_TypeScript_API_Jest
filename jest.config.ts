@@ -1,10 +1,10 @@
 import type { Config } from "@jest/types";
+import * as TimeHelper from "./src/utils/time-helper";
 
 const config: Config.InitialOptions = {
   preset: "ts-jest",
   testEnvironment: "node",
   moduleFileExtensions: ["ts", "tsx", "js", "jsx", "json", "node"],
-  globalSetup: "<rootDir>/test/integrationTests/jest.setup.ts",
   transform: {
     "^.+\\.(ts|tsx)$": "ts-jest",
   },
@@ -13,11 +13,17 @@ const config: Config.InitialOptions = {
     "^@tests/(.*)$": "<rootDir>/tests/$1",
   },
   testMatch: ["<rootDir>/**/*.test.(ts|tsx|js|jsx)"],
-  globals: {
-    "ts-jest": {
-      tsconfig: "tsconfig.json",
-    },
-  },
+  reporters: [
+    "default",
+    [
+      "jest-junit",
+      {
+        outputDirectory: "test/test-results",
+        outputName: `results-${TimeHelper.getFormattedDateTime()}.xml`,
+      },
+    ],
+  ],
+  setupFiles: ["./test/jest.setup.ts"],
 };
 
 export default config;
