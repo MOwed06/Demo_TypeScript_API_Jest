@@ -1,9 +1,9 @@
-import Database from "better-sqlite3";
-import * as Config from "./app-config.json";
-import Logger from "./utils/logger";
-import * as Entities from "./entities/db-objects";
+import Database from 'better-sqlite3';
+import * as Config from './app-config.json';
+import Logger from './utils/logger';
+import * as Entities from './entities/db-objects';
 
-const sqlLogger = (message?: unknown, ...additionalArgs: unknown[]) => {
+const sqlLogger = (message?: unknown, ..._additionalArgs: unknown[]) => {
   Logger.debug(`SQL Query: ${message}`);
 };
 
@@ -16,9 +16,7 @@ const bigBooksDb = new Database(Config.databaseFile, {
 
 export function getUser(key: number) {
   Logger.debug(`getUser: key=${key}`);
-  const dbData = bigBooksDb
-    .prepare("SELECT * FROM appUsers WHERE key = ?")
-    .get(key);
+  const dbData = bigBooksDb.prepare('SELECT * FROM appUsers WHERE key = ?').get(key);
   if (!dbData) {
     throw new Error(`User with key=${key} not found`);
   }
@@ -28,9 +26,7 @@ export function getUser(key: number) {
 
 export function getBook(key: number) {
   Logger.debug(`getBook: key=${key}`);
-  const dbData = bigBooksDb
-    .prepare("SELECT * FROM books WHERE key = ?")
-    .get(key);
+  const dbData = bigBooksDb.prepare('SELECT * FROM books WHERE key = ?').get(key);
   if (!dbData) {
     throw new Error(`Book with key=${key} not found`);
   }
