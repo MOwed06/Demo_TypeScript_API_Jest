@@ -9,6 +9,7 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
+import * as RandomData from "../../src/utils/random-data";
 import {
   Genre,
   HttpStatus,
@@ -16,6 +17,7 @@ import {
   TransactionType,
 } from "../../src/enumerations";
 import * as StringHelper from "../../src/utils/string-helper";
+import { BookAddUpdateDto } from "../../src/interfaces/book-interface";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS =
@@ -219,6 +221,98 @@ describe("getUserDetails operation", () => {
 
       expect(response.status).toBe(HttpStatus.Unauthorized);
       expect(response.error).toContain("Invalid password");
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe("addBook operation", () => {
+  // existing book ISBN
+  const BOOK_2_ISBN = "31AB208D-EA2D-458B-B708-744E16BBDE5A";
+
+  let newBookDto: BookAddUpdateDto;
+
+  // not the full enumeration, just a sample for testing
+  const genreList: Genre[] = [
+    Genre.Fiction,
+    Genre.Childrens,
+    Genre.Fantasy,
+    Genre.Mystery,
+    Genre.Biography,
+  ];
+
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+    // randomize book details to avoid conflicts
+    newBookDto = {
+      title: RandomData.randomSentence(),
+      author: RandomData.randomPerson(),
+      isbn: RandomData.generateGUID().toUpperCase(),
+      description: RandomData.randomSentence(),
+      genre: RandomData.selectFromArray(genreList),
+      price: RandomData.randomDecimal(12.01, 23.01),
+      stockQuantity: 10,
+    };
+  });
+
+  test(
+    "addBook as Admin user",
+    async () => {
+      const response = await ApiMessenger.addBook(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newBookDto
+      );
+
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data).toBeDefined();
+      expect(response.data?.title).toBe(newBookDto.title);
+      expect(response.data?.author).toBe(newBookDto.author);
+      expect(response.data?.isbn).toBe(newBookDto.isbn);
+      expect(response.data?.description).toBe(newBookDto.description);
+      expect(response.data?.genre).toBe(Genre[newBookDto.genre]);
+      const expectedPriceString = StringHelper.toUSD(newBookDto.price);
+      expect(response.data?.price).toBe(expectedPriceString);
+      expect(response.data?.inStock).toBe(true);
+      expect(response.data?.key).toBeGreaterThan(0);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Customer cannot add a book - Forbidden",
+    async () => {
+      const TUCKER_USER_EMAIL = "Savannah.Tucker@demo.com";
+
+      const response = await ApiMessenger.addBook(
+        {
+          userId: TUCKER_USER_EMAIL,
+          password: AppConfig.defaultUserPassword,
+        },
+        newBookDto
+      );
+
+      expect(response.status).toBe(HttpStatus.Forbidden);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Invalid, duplicate ISBN - Bad Request",
+    async () => {
+      newBookDto.isbn = BOOK_2_ISBN;
+      const response = await ApiMessenger.addBook(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newBookDto
+      );
+
+      expect(response.status).toBe(HttpStatus.BadRequest);
+      expect(response.error).toContain("Duplicate ISBN");
     },
     TestConfig.longTestTimeout
   );
