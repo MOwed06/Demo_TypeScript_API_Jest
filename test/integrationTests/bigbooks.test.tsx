@@ -209,7 +209,6 @@ describe("getUserDetails operation", () => {
   test(
     "Invalid Password - Unauthorized",
     async () => {
-      const ANDERSON_USER_KEY = 4;
       const response = await ApiMessenger.getUserDetails(
         {
           userId: AppConfig.adminUserId,
