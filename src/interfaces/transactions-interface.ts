@@ -5,7 +5,7 @@ export interface TransactionDto {
   transactionKey: number;
   transactionDate: string;
   transactionType: Enum.TransactionType;
-  transactionAccount: number;
+  transactionAmount: number;
   purchaseBookKey?: number;
   purchaseQuantity?: number;
 }

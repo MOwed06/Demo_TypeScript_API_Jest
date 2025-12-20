@@ -24,6 +24,7 @@ import { HttpStatus } from "./enumerations";
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
+const USERS_URI = `${Config.apiBaseUrl}/api/users`;
 const BOOKS_URI = `${Config.apiBaseUrl}/api/books`;
 
 // configure for self-signed certificate
@@ -36,7 +37,7 @@ enum HttpMethod {
 }
 
 // send authorization request and return full API response
-export const requestAuthorization = async (
+const requestAuthorization = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<AuthResponse>> => {
   const messageHeader = new Headers();
@@ -128,6 +129,18 @@ export const getUserDetails = async (
   const uri = `${ACCOUNTS_URI}/${key}`;
   return await transmitRequest<UserDetailsDto>(
     uri,
+    HttpMethod.GET,
+    authRequest,
+    null
+  );
+};
+
+// get details of the currently authenticated user
+export const getCurrentUserDetails = async (
+  authRequest: AuthRequest
+): Promise<ApiResponse<UserDetailsDto>> => {
+  return await transmitRequest<UserDetailsDto>(
+    USERS_URI,
     HttpMethod.GET,
     authRequest,
     null

@@ -33,10 +33,13 @@ async function main(): Promise<void> {
     );
 
     // demonstrate authorization rejected
-    const badResponse = await ApiMessenger.requestAuthorization({
-      userId: "somebugy@demo.com",
-      password: Config.defaultUserPassword,
-    });
+    const badResponse = await ApiMessenger.getBookDetails(
+      {
+        userId: "somebugy@demo.com",
+        password: Config.defaultUserPassword,
+      },
+      2
+    );
     console.log("Authorization response:", badResponse);
     console.log("\n");
 

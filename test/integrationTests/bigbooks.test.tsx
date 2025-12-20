@@ -9,7 +9,12 @@ import AppConfig from "../../src/app-config.json";
 import * as ProcessHandler from "../../src/utils/process-handler";
 import * as DbHandler from "../../src/db-handler";
 import * as ApiMessenger from "../../src/api-messenger";
-import { Genre, HttpStatus, UserRole } from "../../src/enumerations";
+import {
+  Genre,
+  HttpStatus,
+  UserRole,
+  TransactionType,
+} from "../../src/enumerations";
 import * as StringHelper from "../../src/utils/string-helper";
 
 // calculate delay to allow API to launch, add 2 seconds buffer
@@ -31,10 +36,13 @@ beforeAll(async () => {
 // but separate from the database entities.
 // This suite confirms the validity of the DTO objects.
 describe("DTO get operations match Database entities", () => {
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+  });
+
   test(
     "BookDetailsDto matches Book entity",
     async () => {
-      Logger.info(expect.getState().currentTestName);
       const GENTLEMEN_MOSCOW_BOOK_KEY = 6;
 
       const expectedBook = DbHandler.getBook(GENTLEMEN_MOSCOW_BOOK_KEY);
@@ -81,12 +89,109 @@ describe("DTO get operations match Database entities", () => {
   );
 });
 
-describe("Access errors", () => {
+describe("getUserDetails operation", () => {
+  const ANDERSON_USER_KEY = 4;
+  const ANDERSON_USER_EMAIL = "Arthur.Anderson@demo.com";
+  const TUCKER_USER_EMAIL = "Savannah.Tucker@demo.com";
+
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+  });
+
   test(
-    "Invalid User, Authorization Rejected",
+    "Admin access getUserDetails",
     async () => {
-      Logger.info(expect.getState().currentTestName);
-      const ANDERSON_USER_KEY = 4;
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data?.userEmail).toBe(ANDERSON_USER_EMAIL);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "getUserDetails, account info",
+    async () => {
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+      // expect 3 transactions in account history
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data?.userEmail).toBe(ANDERSON_USER_EMAIL);
+      expect(response.data?.role).toBe(UserRole[UserRole.Customer]);
+      expect(response.data?.isActive).toBe(true);
+      expect(response.data?.wallet).toBe("$100.00");
+      expect(response.data?.transactions).toHaveLength(3);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "getUserDetails, transaction info",
+    async () => {
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+      // expect book purchase transaction on date 2025-03-17
+      const EXPECTED_TRANSACTION_DATE = "2025-03-17";
+      const transactionUserDetails = response.data?.transactions.find((tx) =>
+        tx.transactionDate.startsWith(EXPECTED_TRANSACTION_DATE)
+      );
+      expect(transactionUserDetails).toBeDefined();
+      expect(transactionUserDetails?.transactionType).toBe(
+        TransactionType[TransactionType.Purchase]
+      );
+      expect(transactionUserDetails?.transactionAmount).toBe(-13.91);
+      expect(transactionUserDetails?.purchaseBookKey).toBe(3);
+      expect(transactionUserDetails?.purchaseQuantity).toBe(1);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Customer access getCurrentUserDetails",
+    async () => {
+      const response = await ApiMessenger.getCurrentUserDetails({
+        userId: ANDERSON_USER_EMAIL,
+        password: AppConfig.defaultUserPassword,
+      });
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data?.userEmail).toBe(ANDERSON_USER_EMAIL);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "getUserDetails, access to separate user - Forbidden",
+    async () => {
+      const response = await ApiMessenger.getUserDetails(
+        {
+          userId: TUCKER_USER_EMAIL,
+          password: AppConfig.defaultUserPassword,
+        },
+        ANDERSON_USER_KEY
+      );
+      expect(response.status).toBe(HttpStatus.Forbidden);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Invalid User - Unauthorized",
+    async () => {
       const response = await ApiMessenger.getUserDetails(
         {
           userId: "user.unknown@demo.com",
@@ -102,10 +207,8 @@ describe("Access errors", () => {
   );
 
   test(
-    "Invalid Password - Authorization Rejected",
+    "Invalid Password - Unauthorized",
     async () => {
-      Logger.info(expect.getState().currentTestName);
-      const ANDERSON_USER_KEY = 4;
       const response = await ApiMessenger.getUserDetails(
         {
           userId: AppConfig.adminUserId,
@@ -116,26 +219,6 @@ describe("Access errors", () => {
 
       expect(response.status).toBe(HttpStatus.Unauthorized);
       expect(response.error).toContain("Invalid password");
-    },
-    TestConfig.longTestTimeout
-  );
-
-  test(
-    "Authorization Rejection - User Details Access Denied",
-    async () => {
-      Logger.info(expect.getState().currentTestName);
-      // a user cannot access details of another user account
-      const ANDERSON_USER_KEY = 4;
-      const VALID_CUSTOMER_EMAIL = "Savannah.Tucker@demo.com";
-      const response = await ApiMessenger.getUserDetails(
-        {
-          userId: VALID_CUSTOMER_EMAIL,
-          password: AppConfig.defaultUserPassword,
-        },
-        ANDERSON_USER_KEY
-      );
-
-      expect(response.status).toBe(HttpStatus.Forbidden);
     },
     TestConfig.longTestTimeout
   );

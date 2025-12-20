@@ -18,6 +18,7 @@ The application is a brief exercise of a sampling of the operations of the BigBo
   - request authorization token (GET, /api/authentication/authenticate)
   - get user account details (GET, /api/accounts/#)
   - add user account (POST, /api/accounts)
+  - get current user details (GET, /api/users)
   - get book details (GET, /api/books)
   - add book (POST, /api/books)
   - add book review (POST, /api/books/#/reviews)
