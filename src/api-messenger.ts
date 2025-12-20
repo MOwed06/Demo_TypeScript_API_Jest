@@ -1,10 +1,8 @@
 /**
  * File: src/api-messenger.ts
  * Description: This file contains functions to interact with the BigBooks API
- * To allow full interaction with the API, this module includes both methods
- * which do and do not handle the response body.
- * Methods prefixed with "transmit" do not handle the response body.
- * Methods prefixed with "send" do resolve the response body as JSON.
+ * To allow full interaction with the API, API returns are wrapped in ApiResponse<T>
+ * which includes status, data, and error information.
  */
 
 import * as Config from "./app-config.json";
@@ -27,7 +25,7 @@ const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
 const USERS_URI = `${Config.apiBaseUrl}/api/users`;
 const BOOKS_URI = `${Config.apiBaseUrl}/api/books`;
 
-// configure for self-signed certificate
+// ignore invalid SSL certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
 
 enum HttpMethod {
@@ -36,7 +34,7 @@ enum HttpMethod {
   PATCH = "PATCH",
 }
 
-// send authorization request and return full API response
+// refer to AuthService.cs, GenerateToken()
 const requestAuthorization = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<AuthResponse>> => {
@@ -57,7 +55,7 @@ const requestAuthorization = async (
     return {
       status: response.status as HttpStatus,
       data: undefined,
-      error: await response.text(),
+      error: await response.text(), // populate error with un-parsed response text
     } as ApiResponse<AuthResponse>;
   }
 
@@ -68,10 +66,12 @@ const requestAuthorization = async (
   return {
     status: response.status as HttpStatus,
     data: authResponse,
-    error: "",
+    error: undefined,
   } as ApiResponse<AuthResponse>;
 };
 
+// generalized request transmitter
+// handles authorization and transmits request using response token
 export const transmitRequest = async <T>(
   uri: string,
   method: HttpMethod,
@@ -118,10 +118,11 @@ export const transmitRequest = async <T>(
   return {
     status: response.status as HttpStatus,
     data: responseData,
-    error: "",
+    error: undefined,
   } as ApiResponse<T>;
 };
 
+// refer to AccountsController.cs, GetAccountInfo()
 export const getUserDetails = async (
   authRequest: AuthRequest,
   key: number
@@ -135,7 +136,7 @@ export const getUserDetails = async (
   );
 };
 
-// get details of the currently authenticated user
+// refer to UsersController.cs, GetCurrentUser()
 export const getCurrentUserDetails = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<UserDetailsDto>> => {
@@ -147,6 +148,7 @@ export const getCurrentUserDetails = async (
   );
 };
 
+// refer to BookReviewsController.cs, AddBookReview()
 export const addBookReview = async (
   authRequest: AuthRequest,
   bookKey: number,
@@ -161,6 +163,7 @@ export const addBookReview = async (
   );
 };
 
+// refer to BooksController.cs, AddBook()
 export const addBook = async (
   authRequest: AuthRequest,
   bookAddDto: BookAddUpdateDto
@@ -173,6 +176,7 @@ export const addBook = async (
   );
 };
 
+// refer to BooksController.cs, GetBook()
 export const getBookDetails = async (
   authRequest: AuthRequest,
   bookKey: number
@@ -186,6 +190,7 @@ export const getBookDetails = async (
   );
 };
 
+// refer to AccountsController.cs, AddAccount()
 export const addUser = async (
   authRequest: AuthRequest,
   userDto: UserAddUpdateDto
