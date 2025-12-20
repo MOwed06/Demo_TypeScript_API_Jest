@@ -5,20 +5,14 @@
  * which includes status, data, and error information.
  */
 
-import * as Config from "./app-config.json";
-import { AuthRequest, AuthResponse } from "./interfaces/auth-interface";
-import {
-  UserAddUpdateDto,
-  UserDetailsDto,
-} from "./interfaces/account-interface";
-import Logger from "./utils/logger";
-import {
-  BookReviewDto,
-  BookReviewAddDto,
-} from "./interfaces/book-reviews-interface";
-import { BookAddUpdateDto, BookDetailsDto } from "./interfaces/book-interface";
-import { ApiResponse } from "./interfaces/api-response";
-import { HttpStatus } from "./enumerations";
+import * as Config from './app-config.json';
+import { AuthRequest, AuthResponse } from './interfaces/auth-interface';
+import { UserAddUpdateDto, UserDetailsDto } from './interfaces/account-interface';
+import Logger from './utils/logger';
+import { BookReviewDto, BookReviewAddDto } from './interfaces/book-reviews-interface';
+import { BookAddUpdateDto, BookDetailsDto } from './interfaces/book-interface';
+import { ApiResponse } from './interfaces/api-response';
+import { HttpStatus, HttpMethod } from './enumerations';
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
@@ -26,26 +20,20 @@ const USERS_URI = `${Config.apiBaseUrl}/api/users`;
 const BOOKS_URI = `${Config.apiBaseUrl}/api/books`;
 
 // ignore invalid SSL certificates
-process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
-
-enum HttpMethod {
-  GET = "GET",
-  POST = "POST",
-  PATCH = "PATCH",
-}
+process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
 // refer to AuthService.cs, GenerateToken()
 const requestAuthorization = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<AuthResponse>> => {
   const messageHeader = new Headers();
-  messageHeader.append("Content-Type", "application/json");
+  messageHeader.append('Content-Type', 'application/json');
 
   const request: RequestInit = {
     method: HttpMethod.POST,
     headers: messageHeader,
     body: JSON.stringify(authRequest),
-    redirect: "follow",
+    redirect: 'follow',
   };
 
   const response = await fetch(AUTH_URI, request);
@@ -72,12 +60,12 @@ const requestAuthorization = async (
 
 // generalized request transmitter
 // handles authorization and transmits request using response token
-export const transmitRequest = async <T>(
+export const transmitRequest = async <TOutput, TInput = undefined>(
   uri: string,
   method: HttpMethod,
   authRequest: AuthRequest,
-  body?: any
-): Promise<ApiResponse<T>> => {
+  body?: TInput
+): Promise<ApiResponse<TOutput>> => {
   const authResponse = await requestAuthorization(authRequest);
 
   // authorization failed
@@ -86,17 +74,17 @@ export const transmitRequest = async <T>(
       status: authResponse.status,
       data: undefined,
       error: authResponse.error,
-    } as ApiResponse<T>;
+    } as ApiResponse<TOutput>;
   }
 
   const messageHeader = new Headers();
-  messageHeader.append("Content-Type", "application/json");
-  messageHeader.append("Authorization", `Bearer ${authResponse.data.token}`);
+  messageHeader.append('Content-Type', 'application/json');
+  messageHeader.append('Authorization', `Bearer ${authResponse.data.token}`);
 
   const request: RequestInit = {
     method: method,
     headers: messageHeader,
-    redirect: "follow",
+    redirect: 'follow',
     body: body ? JSON.stringify(body) : undefined,
   };
 
@@ -108,18 +96,18 @@ export const transmitRequest = async <T>(
       status: response.status as HttpStatus,
       data: undefined,
       error: await response.text(),
-    } as ApiResponse<T>;
+    } as ApiResponse<TOutput>;
   }
 
   // healthy response
   Logger.trace(`request: ${response.status} - ${uri}`);
-  const responseData = (await response.json()) as T;
+  const responseData = (await response.json()) as TOutput;
 
   return {
     status: response.status as HttpStatus,
     data: responseData,
     error: undefined,
-  } as ApiResponse<T>;
+  } as ApiResponse<TOutput>;
 };
 
 // refer to AccountsController.cs, GetAccountInfo()
@@ -128,24 +116,14 @@ export const getUserDetails = async (
   key: number
 ): Promise<ApiResponse<UserDetailsDto>> => {
   const uri = `${ACCOUNTS_URI}/${key}`;
-  return await transmitRequest<UserDetailsDto>(
-    uri,
-    HttpMethod.GET,
-    authRequest,
-    null
-  );
+  return await transmitRequest<UserDetailsDto>(uri, HttpMethod.GET, authRequest, undefined);
 };
 
 // refer to UsersController.cs, GetCurrentUser()
 export const getCurrentUserDetails = async (
   authRequest: AuthRequest
 ): Promise<ApiResponse<UserDetailsDto>> => {
-  return await transmitRequest<UserDetailsDto>(
-    USERS_URI,
-    HttpMethod.GET,
-    authRequest,
-    null
-  );
+  return await transmitRequest<UserDetailsDto>(USERS_URI, HttpMethod.GET, authRequest, undefined);
 };
 
 // refer to BookReviewsController.cs, AddBookReview()
@@ -155,7 +133,7 @@ export const addBookReview = async (
   reviewAddDto: BookReviewAddDto
 ): Promise<ApiResponse<BookReviewDto>> => {
   const uri = `${BOOKS_URI}/${bookKey}/reviews`;
-  return await transmitRequest<BookReviewDto>(
+  return await transmitRequest<BookReviewDto, BookReviewAddDto>(
     uri,
     HttpMethod.POST,
     authRequest,
@@ -168,7 +146,7 @@ export const addBook = async (
   authRequest: AuthRequest,
   bookAddDto: BookAddUpdateDto
 ): Promise<ApiResponse<BookDetailsDto>> => {
-  return await transmitRequest<BookDetailsDto>(
+  return await transmitRequest<BookDetailsDto, BookAddUpdateDto>(
     BOOKS_URI,
     HttpMethod.POST,
     authRequest,
@@ -182,12 +160,7 @@ export const getBookDetails = async (
   bookKey: number
 ): Promise<ApiResponse<BookDetailsDto>> => {
   const uri = `${BOOKS_URI}/${bookKey}`;
-  return await transmitRequest<BookDetailsDto>(
-    uri,
-    HttpMethod.GET,
-    authRequest,
-    null
-  );
+  return await transmitRequest<BookDetailsDto>(uri, HttpMethod.GET, authRequest, undefined);
 };
 
 // refer to AccountsController.cs, AddAccount()
@@ -195,7 +168,7 @@ export const addUser = async (
   authRequest: AuthRequest,
   userDto: UserAddUpdateDto
 ): Promise<ApiResponse<UserDetailsDto>> => {
-  return await transmitRequest<UserDetailsDto>(
+  return await transmitRequest<UserDetailsDto, UserAddUpdateDto>(
     ACCOUNTS_URI,
     HttpMethod.POST,
     authRequest,

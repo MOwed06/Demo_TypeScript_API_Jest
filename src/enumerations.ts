@@ -29,3 +29,9 @@ export enum HttpStatus {
   NotFound = 404,
   InternalServerError = 500,
 }
+
+export enum HttpMethod {
+  GET = 'GET',
+  POST = 'POST',
+  PATCH = 'PATCH',
+}
