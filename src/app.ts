@@ -4,20 +4,21 @@
  * for more details, refer to: https://github.com/MOwed06/Demo_CSharp_API
  */
 
-import Logger from "./utils/logger";
-import * as ProcessHandler from "./utils/process-handler";
-import * as Config from "./app-config.json";
-import * as TimeHelper from "./utils/time-helper";
-import * as DbHandler from "./db-handler";
-import * as ApiMessenger from "./api-messenger";
-import { displayWithTime } from "./utils/console-helper";
-import * as RandomData from "./utils/random-data";
-import { Genre, UserRole } from "./enumerations";
+import Logger from './utils/logger';
+import * as ProcessHandler from './utils/process-handler';
+import * as Config from './app-config.json';
+import * as TimeHelper from './utils/time-helper';
+import * as DbHandler from './db-handler';
+import * as ApiMessenger from './api-messenger';
+import { displayWithTime } from './utils/console-helper';
+import * as RandomData from './utils/random-data';
+import { Genre, UserRole } from './enumerations';
+import { UserAddUpdateDto } from './interfaces/account-interface';
 
 async function main(): Promise<void> {
   try {
-    displayWithTime("Application started");
-    console.log("\n");
+    displayWithTime('Application started');
+    console.log('\n');
 
     // launch the API process in the background
     displayWithTime(`Starting API process...`);
@@ -28,20 +29,18 @@ async function main(): Promise<void> {
       confirmationText: Config.apiStatusMessage,
     });
 
-    console.log(
-      `${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`
-    );
+    console.log(`${TimeHelper.getTimeMSec()} - API launched, Healthy: ${processStatus}\n`);
 
     // demonstrate authorization rejected
     const badResponse = await ApiMessenger.getBookDetails(
       {
-        userId: "somebugy@demo.com",
+        userId: 'somebugy@demo.com',
         password: Config.defaultUserPassword,
       },
       2
     );
-    console.log("Authorization response:", badResponse);
-    console.log("\n");
+    console.log('Authorization response:', badResponse);
+    console.log('\n');
 
     // demonstrate get user details for known user
     const ANDERSON_USER_KEY = 4;
@@ -52,19 +51,16 @@ async function main(): Promise<void> {
       },
       ANDERSON_USER_KEY
     );
-    console.log("User details response:", userDetails.data);
+    console.log('User details response:', userDetails.data);
 
     // search user details for particular transaction
-    const EXPECTED_TRANSACTION_DATE = "2025-03-17";
+    const EXPECTED_TRANSACTION_DATE = '2025-03-17';
     const transactionUserDetails = userDetails.data?.transactions.find((tx) =>
       tx.transactionDate.startsWith(EXPECTED_TRANSACTION_DATE)
     );
     // expect book 3 purchased on 2025-03-17
-    console.log(
-      `Transaction on ${EXPECTED_TRANSACTION_DATE}:`,
-      transactionUserDetails
-    );
-    console.log("\n");
+    console.log(`Transaction on ${EXPECTED_TRANSACTION_DATE}:`, transactionUserDetails);
+    console.log('\n');
 
     // create a new book
     const newBookAddDto = {
@@ -84,22 +80,22 @@ async function main(): Promise<void> {
       },
       newBookAddDto
     );
-    console.log("New book response:", newBookResponse.data);
-    console.log("\n");
+    console.log('New book response:', newBookResponse.data);
+    console.log('\n');
 
     // confirm database content for added book
     if (!newBookResponse?.data?.key) {
-      displayWithTime("ERROR: New book response is missing the book key");
+      displayWithTime('ERROR: New book response is missing the book key');
     } else {
       const dbBookRecord = DbHandler.getBook(newBookResponse.data.key);
-      console.log("DB book record:", dbBookRecord);
-      console.log("\n");
+      console.log('DB book record:', dbBookRecord);
+      console.log('\n');
     }
 
     // create new user
     const newUserName = RandomData.randomPerson();
-    const newUserAddDto = {
-      userEmail: `${newUserName.replace(" ", ".")}@demo.com`,
+    const newUserAddDto: UserAddUpdateDto = {
+      userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
       userName: newUserName,
       password: Config.defaultUserPassword,
       role: UserRole.Customer,
@@ -113,20 +109,20 @@ async function main(): Promise<void> {
       },
       newUserAddDto
     );
-    console.log("New user response:", newUserResponse.data);
-    console.log("\n");
+    console.log('New user response:', newUserResponse.data);
+    console.log('\n');
 
     if (!newUserResponse?.data?.key) {
-      displayWithTime("ERROR: New user response is missing the user key");
+      displayWithTime('ERROR: New user response is missing the user key');
     } else {
       // confirm database content for added user
       const dbUserRecord = DbHandler.getUser(newUserResponse.data.key);
-      console.log("DB user record:", dbUserRecord);
-      console.log("\n");
+      console.log('DB user record:', dbUserRecord);
+      console.log('\n');
     }
 
     if (!newUserResponse?.data?.key || !newBookResponse?.data?.key) {
-      displayWithTime("ERROR: bad user or bad book key, cannot create review");
+      displayWithTime('ERROR: bad user or bad book key, cannot create review');
     } else {
       // create a book review for a added book
       const bookReview = await ApiMessenger.addBookReview(
@@ -138,11 +134,11 @@ async function main(): Promise<void> {
         {
           score: 7,
           isAnonymous: false,
-          description: "Great book, highly recommend!",
+          description: 'Great book, highly recommend!',
         }
       );
-      console.log("Book review response:", bookReview.data);
-      console.log("\n");
+      console.log('Book review response:', bookReview.data);
+      console.log('\n');
     }
 
     // wait a bit before closing everything
@@ -153,9 +149,9 @@ async function main(): Promise<void> {
     console.error(`Fatal error in main: ${error}`);
   } finally {
     // close things nicely ++++++++++++++++++++++++++++++++++++++++++++++++++++
-    displayWithTime("Closing background process");
+    displayWithTime('Closing background process');
     ProcessHandler.endProcess();
-    displayWithTime("Application exiting");
+    displayWithTime('Application exiting');
   }
 }
 
