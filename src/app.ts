@@ -141,6 +141,19 @@ async function main(): Promise<void> {
       console.log('\n');
     }
 
+    // get books by genre (Childrens)
+    const childrensBooks = await ApiMessenger.getBooksByGenre(
+      {
+        userId: Config.adminUserId,
+        password: Config.defaultUserPassword,
+      },
+      Genre[Genre.Childrens]
+    );
+    const bookTitles = childrensBooks.data?.map((book) => book.title).join('; ');
+    console.log(`Childrens books titles: ${bookTitles}`);
+
+    console.log('\n');
+
     // wait a bit before closing everything
     await TimeHelper.waitSeconds(2);
   } catch (error) {

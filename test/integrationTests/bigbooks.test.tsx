@@ -368,6 +368,42 @@ describe('addUser operation', () => {
   );
 });
 
+describe('getBooksByGenre operation', () => {
+  const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+  });
+
+  test(
+    'Get books by Genre - Childrens',
+    async () => {
+      const EXPECTED_TITLES = [
+        'The Stinky Cheese Man and Other Fairly Stupid Tales',
+        'Too Many Frogs',
+        'Gregor and the Prophecy of Bane',
+        'Where the Wild Things Are',
+      ];
+      const response = await ApiMessenger.getBooksByGenre(
+        {
+          userId: TUCKER_USER_EMAIL,
+          password: AppConfig.defaultUserPassword,
+        },
+        Genre[Genre.Childrens]
+      );
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data).toBeDefined();
+      expect(response.data?.length).toBeGreaterThanOrEqual(EXPECTED_TITLES.length);
+      // confirm expected book titles exist in response
+      EXPECTED_TITLES.forEach((expectedBook) => {
+        const bookFound = response.data?.find((bk) => bk.title === expectedBook);
+        expect(bookFound).toBeDefined();
+      });
+      expect(response.data?.every((bk) => bk.genre === Genre[Genre.Childrens])).toBe(true);
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
 afterAll(() => {
   ProcessHandler.endProcess();
   Logger.info('Closing BigBooks API process after tests');

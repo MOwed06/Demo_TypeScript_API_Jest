@@ -10,7 +10,7 @@ import { AuthRequest, AuthResponse } from './interfaces/auth-interface';
 import { UserAddUpdateDto, UserDetailsDto } from './interfaces/account-interface';
 import Logger from './utils/logger';
 import { BookReviewDto, BookReviewAddDto } from './interfaces/book-reviews-interface';
-import { BookAddUpdateDto, BookDetailsDto } from './interfaces/book-interface';
+import { BookAddUpdateDto, BookDetailsDto, BookOverviewDto } from './interfaces/book-interface';
 import { ApiResponse } from './interfaces/api-response';
 import { HttpStatus, HttpMethod } from './enumerations';
 
@@ -174,4 +174,13 @@ export const addUser = async (
     authRequest,
     userDto
   );
+};
+
+// refer to BooksController.cs, GetBooksByGenre
+export const getBooksByGenre = async (
+  authRequest: AuthRequest,
+  genre: string
+): Promise<ApiResponse<BookOverviewDto[]>> => {
+  const uri = `${BOOKS_URI}/genre?name=${genre}`;
+  return await transmitRequest<BookOverviewDto[]>(uri, HttpMethod.GET, authRequest, undefined);
 };
