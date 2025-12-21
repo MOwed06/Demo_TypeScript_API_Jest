@@ -416,6 +416,8 @@ describe('getBooksByGenre operation', () => {
 });
 
 describe('purchaseBooks operation', () => {
+  const BOOK_PRICE = 20.0;
+  const DEFAULT_WALLET_AMOUNT = 30.0;
   let newBookDetails: BookDetailsDto;
   let newUserAddDto: UserAddUpdateDto;
   beforeEach(async () => {
@@ -429,7 +431,7 @@ describe('purchaseBooks operation', () => {
       password: 'TestPassword123!',
       role: UserRole.Customer,
       isActive: true,
-      wallet: 30.0, // sufficient funds for single book purchase test
+      wallet: DEFAULT_WALLET_AMOUNT, // sufficient funds for single book purchase test
     };
 
     // before each test, create a new book with
@@ -440,7 +442,7 @@ describe('purchaseBooks operation', () => {
       isbn: RandomData.generateGUID(),
       description: RandomData.randomSentence(),
       genre: Genre.Fiction,
-      price: 20.0,
+      price: BOOK_PRICE,
       stockQuantity: 3,
     };
 
@@ -475,7 +477,7 @@ describe('purchaseBooks operation', () => {
       const purchaseRequestDto: PurchaseRequestDto = {
         bookKey: newBookDetails.key,
         transactionConfirmation: RandomData.generateGUID(),
-        quantity: 1,
+        requestedQuantity: 1,
       };
 
       const purchaseResponse = await ApiMessenger.purchaseBooks(
@@ -487,8 +489,7 @@ describe('purchaseBooks operation', () => {
       );
       expect(purchaseResponse.status).toBe(HttpStatus.OK);
       expect(purchaseResponse.data).toBeDefined();
-      const expectedWalletString = StringHelper.toUSD(newUserAddDto.wallet - newBookDetails.price);
-      expect(purchaseResponse.data?.wallet).toBe(expectedWalletString);
+      expect(purchaseResponse.data?.wallet).toBe('$10.00'); // $30 - $20 = $10
       // expect child transaction with book key
       const purchaseTransaction = purchaseResponse.data?.transactions.find(
         (tx) => tx.purchaseBookKey === newBookDetails.key
