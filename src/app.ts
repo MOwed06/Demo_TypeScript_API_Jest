@@ -14,6 +14,7 @@ import { displayWithTime } from './utils/console-helper';
 import * as RandomData from './utils/random-data';
 import { Genre, UserRole } from './enumerations';
 import { UserAddUpdateDto } from './interfaces/account-interface';
+import { PurchaseRequestDto } from './interfaces/transactions-interface';
 
 async function main(): Promise<void> {
   try {
@@ -94,13 +95,14 @@ async function main(): Promise<void> {
 
     // create new user
     const newUserName = RandomData.randomPerson();
+    const userWallet = newBookAddDto.price + 20; // ensure enough funds to buy the book
     const newUserAddDto: UserAddUpdateDto = {
       userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
       userName: newUserName,
       password: Config.defaultUserPassword,
       role: UserRole.Customer,
       isActive: true,
-      wallet: RandomData.randomDecimal(100, 200),
+      wallet: userWallet,
     };
     const newUserResponse = await ApiMessenger.addUser(
       {
@@ -138,6 +140,23 @@ async function main(): Promise<void> {
         }
       );
       console.log('Book review response:', bookReview.data);
+      console.log('\n');
+
+      // purchase book for user
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookResponse.data.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        requestedQuantity: 1,
+      };
+
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        {
+          userId: newUserAddDto.userEmail,
+          password: Config.defaultUserPassword,
+        },
+        purchaseRequestDto
+      );
+      console.log('Purchase response:', purchaseResponse.data);
       console.log('\n');
     }
 

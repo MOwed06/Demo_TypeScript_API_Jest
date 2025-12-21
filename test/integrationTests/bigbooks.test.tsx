@@ -12,8 +12,9 @@ import * as ApiMessenger from '../../src/api-messenger';
 import * as RandomData from '../../src/utils/random-data';
 import { Genre, HttpStatus, UserRole, TransactionType } from '../../src/enumerations';
 import * as StringHelper from '../../src/utils/string-helper';
-import { BookAddUpdateDto } from '../../src/interfaces/book-interface';
+import { BookAddUpdateDto, BookDetailsDto } from '../../src/interfaces/book-interface';
 import { UserAddUpdateDto } from 'src/interfaces/account-interface';
+import { PurchaseRequestDto } from 'src/interfaces/transactions-interface';
 
 // calculate delay to allow API to launch, add 2 seconds buffer
 const BACKGROUND_APP_LAUNCH_DELAY_MS = AppConfig.apiLaunchDelaySec * 1000 + 5000;
@@ -409,6 +410,90 @@ describe('getBooksByGenre operation', () => {
         expect(bookFound).toBeDefined();
       });
       expect(response.data?.every((bk) => bk.genre === Genre[searchGenre])).toBe(true);
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe('purchaseBooks operation', () => {
+  let newBookDetails: BookDetailsDto;
+  let newUserAddDto: UserAddUpdateDto;
+  beforeEach(async () => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+
+    // populate new user dto, but do (yet) add to system
+    const newUserName = RandomData.randomPerson();
+    newUserAddDto = {
+      userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
+      userName: newUserName,
+      password: 'TestPassword123!',
+      role: UserRole.Customer,
+      isActive: true,
+      wallet: 30.0, // sufficient funds for single book purchase test
+    };
+
+    // before each test, create a new book with
+    // price = $20 and stockQuantity = 3
+    const newBookDto: BookAddUpdateDto = {
+      title: RandomData.randomSentence(),
+      author: RandomData.randomPerson(),
+      isbn: RandomData.generateGUID(),
+      description: RandomData.randomSentence(),
+      genre: Genre.Fiction,
+      price: 20.0,
+      stockQuantity: 3,
+    };
+
+    const addBookResponse = await ApiMessenger.addBook(
+      {
+        userId: AppConfig.adminUserId,
+        password: AppConfig.defaultUserPassword,
+      },
+      newBookDto
+    );
+    expect(addBookResponse.status).toBe(HttpStatus.OK);
+    expect(addBookResponse.data).toBeDefined();
+    newBookDetails = addBookResponse.data!; // force non-null for test use
+    Logger.info(`New book Key: ${newBookDetails.key}`);
+  });
+
+  test(
+    'Purchase book success',
+    async () => {
+      // first, add new user to system
+      const addUserResponse = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(addUserResponse.status).toBe(HttpStatus.OK);
+      expect(addUserResponse.data).toBeDefined();
+      Logger.debug(`Added new user: ${addUserResponse.data?.key}`);
+
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookDetails.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        quantity: 1,
+      };
+
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        {
+          userId: newUserAddDto.userEmail,
+          password: newUserAddDto.password,
+        },
+        purchaseRequestDto
+      );
+      expect(purchaseResponse.status).toBe(HttpStatus.OK);
+      expect(purchaseResponse.data).toBeDefined();
+      const expectedWalletString = StringHelper.toUSD(newUserAddDto.wallet - newBookDetails.price);
+      expect(purchaseResponse.data?.wallet).toBe(expectedWalletString);
+      // expect child transaction with book key
+      const purchaseTransaction = purchaseResponse.data?.transactions.find(
+        (tx) => tx.purchaseBookKey === newBookDetails.key
+      );
+      expect(purchaseTransaction).toBeDefined(); // confirm transaction with key exists
     },
     TestConfig.longTestTimeout
   );

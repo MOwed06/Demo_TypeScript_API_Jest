@@ -1,4 +1,4 @@
-import * as Enum from "../enumerations";
+import * as Enum from '../enumerations';
 
 // corresponds to BigBooks.API.Models.TransactionOverviewDto.cs
 export interface TransactionDto {
@@ -8,4 +8,11 @@ export interface TransactionDto {
   transactionAmount: number;
   purchaseBookKey?: number;
   purchaseQuantity?: number;
+}
+
+// corresponds to BigBooks.API.Models.PurchaseRequestDto.cs
+export interface PurchaseRequestDto {
+  bookKey: number;
+  requestedQuantity: number;
+  transactionConfirmation: string;
 }

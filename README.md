@@ -23,6 +23,7 @@ The application is a brief exercise of a sampling of the operations of the BigBo
   - add book (POST, /api/books)
   - add book review (POST, /api/books/#/reviews)
   - get books by genre (GET, /api/books/genre?name=)
+  - purchase books (POST, /api/transactions/purchase)
 - query sqlite database for raw content, refer to ./src/db-handler.ts
 - verbose logging is output to timestamped log files in /logs subdirectory
 
