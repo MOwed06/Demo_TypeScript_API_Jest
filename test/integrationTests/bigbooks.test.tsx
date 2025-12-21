@@ -370,35 +370,45 @@ describe('addUser operation', () => {
 
 describe('getBooksByGenre operation', () => {
   const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
+
+  const CHILDRENS_BOOKS = [
+    'The Stinky Cheese Man and Other Fairly Stupid Tales',
+    'Too Many Frogs',
+    'Gregor and the Prophecy of Bane',
+    'Where the Wild Things Are',
+  ];
+
+  const HISTORY_BOOKS = ['Citizen Soldiers', 'The American Revolution: An Intimate History'];
+
+  const FANTASY_BOOKS = ['The Way of Kings', 'The Hunger Games'];
+
   beforeEach(() => {
     Logger.info(`Starting test: ${expect.getState().currentTestName}`);
   });
 
-  test(
-    'Get books by Genre - Childrens',
-    async () => {
-      const EXPECTED_TITLES = [
-        'The Stinky Cheese Man and Other Fairly Stupid Tales',
-        'Too Many Frogs',
-        'Gregor and the Prophecy of Bane',
-        'Where the Wild Things Are',
-      ];
+  test.each([
+    [Genre.Childrens, CHILDRENS_BOOKS],
+    [Genre.History, HISTORY_BOOKS],
+    [Genre.Fantasy, FANTASY_BOOKS],
+  ])(
+    'Get books by Genre - %s',
+    async (searchGenre, expectedTitles) => {
       const response = await ApiMessenger.getBooksByGenre(
         {
           userId: TUCKER_USER_EMAIL,
           password: AppConfig.defaultUserPassword,
         },
-        Genre[Genre.Childrens]
+        Genre[searchGenre]
       );
       expect(response.status).toBe(HttpStatus.OK);
       expect(response.data).toBeDefined();
-      expect(response.data?.length).toBeGreaterThanOrEqual(EXPECTED_TITLES.length);
+      expect(response.data?.length).toBeGreaterThanOrEqual(expectedTitles.length);
       // confirm expected book titles exist in response
-      EXPECTED_TITLES.forEach((expectedBook) => {
+      expectedTitles.forEach((expectedBook) => {
         const bookFound = response.data?.find((bk) => bk.title === expectedBook);
         expect(bookFound).toBeDefined();
       });
-      expect(response.data?.every((bk) => bk.genre === Genre[Genre.Childrens])).toBe(true);
+      expect(response.data?.every((bk) => bk.genre === Genre[searchGenre])).toBe(true);
     },
     TestConfig.longTestTimeout
   );
