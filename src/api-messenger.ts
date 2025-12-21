@@ -10,14 +10,16 @@ import { AuthRequest, AuthResponse } from './interfaces/auth-interface';
 import { UserAddUpdateDto, UserDetailsDto } from './interfaces/account-interface';
 import Logger from './utils/logger';
 import { BookReviewDto, BookReviewAddDto } from './interfaces/book-reviews-interface';
-import { BookAddUpdateDto, BookDetailsDto } from './interfaces/book-interface';
+import { BookAddUpdateDto, BookDetailsDto, BookOverviewDto } from './interfaces/book-interface';
 import { ApiResponse } from './interfaces/api-response';
 import { HttpStatus, HttpMethod } from './enumerations';
+import { PurchaseRequestDto } from './interfaces/transactions-interface';
 
 const AUTH_URI = `${Config.apiBaseUrl}/api/authentication/authenticate`;
 const ACCOUNTS_URI = `${Config.apiBaseUrl}/api/accounts`;
 const USERS_URI = `${Config.apiBaseUrl}/api/users`;
 const BOOKS_URI = `${Config.apiBaseUrl}/api/books`;
+const TRANSACTIONS_URI = `${Config.apiBaseUrl}/api/transactions`;
 
 // ignore invalid SSL certificates
 process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
@@ -68,7 +70,7 @@ export const transmitRequest = async <TOutput, TInput = undefined>(
 ): Promise<ApiResponse<TOutput>> => {
   const authResponse = await requestAuthorization(authRequest);
 
-  // authorization failed
+  // if authorization failed, pass back the failure response
   if (authResponse.status !== HttpStatus.OK || !authResponse.data) {
     return {
       status: authResponse.status,
@@ -173,5 +175,28 @@ export const addUser = async (
     HttpMethod.POST,
     authRequest,
     userDto
+  );
+};
+
+// refer to BooksController.cs, GetBooksByGenre
+export const getBooksByGenre = async (
+  authRequest: AuthRequest,
+  genre: string
+): Promise<ApiResponse<BookOverviewDto[]>> => {
+  const uri = `${BOOKS_URI}/genre?name=${genre}`;
+  return await transmitRequest<BookOverviewDto[]>(uri, HttpMethod.GET, authRequest, undefined);
+};
+
+// refer to TransactionsController.cs, PurchaseBooks()
+export const purchaseBooks = async (
+  authRequest: AuthRequest,
+  purchaseDto: PurchaseRequestDto
+): Promise<ApiResponse<UserDetailsDto>> => {
+  const uri = `${TRANSACTIONS_URI}/purchase`;
+  return await transmitRequest<UserDetailsDto, PurchaseRequestDto>(
+    uri,
+    HttpMethod.POST,
+    authRequest,
+    purchaseDto
   );
 };

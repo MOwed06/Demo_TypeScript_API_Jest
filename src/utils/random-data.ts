@@ -1,17 +1,11 @@
-import * as FileHandler from "./file-handler";
-import { randomUUID } from "crypto";
+import * as FileHandler from './file-handler';
+import { randomUUID } from 'crypto';
 
-const FIRST_NAMES: string[] = FileHandler.readFileAsStrings(
-  "./src/data/first-names.txt"
-);
+const FIRST_NAMES: string[] = FileHandler.readFileAsStrings('./src/data/first-names.txt');
 
-const FAMILY_NAMES: string[] = FileHandler.readFileAsStrings(
-  "./src/data/family-names.txt"
-);
+const FAMILY_NAMES: string[] = FileHandler.readFileAsStrings('./src/data/family-names.txt');
 
-const SENTENCES: string[] = FileHandler.readFileAsStrings(
-  "./src/data/poetry-rfrost.txt"
-);
+const SENTENCES: string[] = FileHandler.readFileAsStrings('./src/data/poetry-rfrost.txt');
 
 /// Returns true with the given percentage chance (0-100)
 export const probability = (percentage: number): boolean => {
@@ -19,7 +13,7 @@ export const probability = (percentage: number): boolean => {
 };
 
 export const generateGUID = (): string => {
-  return randomUUID();
+  return randomUUID().toUpperCase();
 };
 
 /// Returns a random integer in the range

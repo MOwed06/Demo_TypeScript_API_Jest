@@ -3,25 +3,21 @@
  * Description: demonstration of end-to-end tests for big books API.
  */
 
-import Logger from "../../src/utils/logger";
-import TestConfig from "../test-config.json";
-import AppConfig from "../../src/app-config.json";
-import * as ProcessHandler from "../../src/utils/process-handler";
-import * as DbHandler from "../../src/db-handler";
-import * as ApiMessenger from "../../src/api-messenger";
-import * as RandomData from "../../src/utils/random-data";
-import {
-  Genre,
-  HttpStatus,
-  UserRole,
-  TransactionType,
-} from "../../src/enumerations";
-import * as StringHelper from "../../src/utils/string-helper";
-import { BookAddUpdateDto } from "../../src/interfaces/book-interface";
+import Logger from '../../src/utils/logger';
+import TestConfig from '../test-config.json';
+import AppConfig from '../../src/app-config.json';
+import * as ProcessHandler from '../../src/utils/process-handler';
+import * as DbHandler from '../../src/db-handler';
+import * as ApiMessenger from '../../src/api-messenger';
+import * as RandomData from '../../src/utils/random-data';
+import { Genre, HttpStatus, UserRole, TransactionType } from '../../src/enumerations';
+import * as StringHelper from '../../src/utils/string-helper';
+import { BookAddUpdateDto, BookDetailsDto } from '../../src/interfaces/book-interface';
+import { UserAddUpdateDto } from 'src/interfaces/account-interface';
+import { PurchaseRequestDto } from 'src/interfaces/transactions-interface';
 
 // calculate delay to allow API to launch, add 2 seconds buffer
-const BACKGROUND_APP_LAUNCH_DELAY_MS =
-  AppConfig.apiLaunchDelaySec * 1000 + 5000;
+const BACKGROUND_APP_LAUNCH_DELAY_MS = AppConfig.apiLaunchDelaySec * 1000 + 5000;
 
 // launch BigBooks server before tests
 beforeAll(async () => {
@@ -37,13 +33,13 @@ beforeAll(async () => {
 // The DTO objects returned by API calls are related to
 // but separate from the database entities.
 // This suite confirms the validity of the DTO objects.
-describe("DTO get operations match Database entities", () => {
+describe('DTO get operations match Database entities', () => {
   beforeEach(() => {
     Logger.info(`Starting test: ${expect.getState().currentTestName}`);
   });
 
   test(
-    "BookDetailsDto matches Book entity",
+    'BookDetailsDto matches Book entity',
     async () => {
       const GENTLEMEN_MOSCOW_BOOK_KEY = 6;
 
@@ -67,7 +63,7 @@ describe("DTO get operations match Database entities", () => {
   );
 
   test(
-    "UserDetailsDto matches AppUser entity",
+    'UserDetailsDto matches AppUser entity',
     async () => {
       Logger.info(expect.getState().currentTestName);
       const ANDERSON_USER_KEY = 4;
@@ -91,17 +87,17 @@ describe("DTO get operations match Database entities", () => {
   );
 });
 
-describe("getUserDetails operation", () => {
+describe('getUserDetails operation', () => {
   const ANDERSON_USER_KEY = 4;
-  const ANDERSON_USER_EMAIL = "Arthur.Anderson@demo.com";
-  const TUCKER_USER_EMAIL = "Savannah.Tucker@demo.com";
+  const ANDERSON_USER_EMAIL = 'Arthur.Anderson@demo.com';
+  const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
 
   beforeEach(() => {
     Logger.info(`Starting test: ${expect.getState().currentTestName}`);
   });
 
   test(
-    "Admin access getUserDetails",
+    'Admin access getUserDetails',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
@@ -117,7 +113,7 @@ describe("getUserDetails operation", () => {
   );
 
   test(
-    "getUserDetails, account info",
+    'getUserDetails, account info',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
@@ -131,14 +127,14 @@ describe("getUserDetails operation", () => {
       expect(response.data?.userEmail).toBe(ANDERSON_USER_EMAIL);
       expect(response.data?.role).toBe(UserRole[UserRole.Customer]);
       expect(response.data?.isActive).toBe(true);
-      expect(response.data?.wallet).toBe("$100.00");
+      expect(response.data?.wallet).toBe('$100.00');
       expect(response.data?.transactions).toHaveLength(3);
     },
     TestConfig.longTestTimeout
   );
 
   test(
-    "getUserDetails, transaction info",
+    'getUserDetails, transaction info',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
@@ -148,7 +144,7 @@ describe("getUserDetails operation", () => {
         ANDERSON_USER_KEY
       );
       // expect book purchase transaction on date 2025-03-17
-      const EXPECTED_TRANSACTION_DATE = "2025-03-17";
+      const EXPECTED_TRANSACTION_DATE = '2025-03-17';
       const transactionUserDetails = response.data?.transactions.find((tx) =>
         tx.transactionDate.startsWith(EXPECTED_TRANSACTION_DATE)
       );
@@ -164,7 +160,7 @@ describe("getUserDetails operation", () => {
   );
 
   test(
-    "Customer access getCurrentUserDetails",
+    'Customer access getCurrentUserDetails',
     async () => {
       const response = await ApiMessenger.getCurrentUserDetails({
         userId: ANDERSON_USER_EMAIL,
@@ -177,7 +173,7 @@ describe("getUserDetails operation", () => {
   );
 
   test(
-    "getUserDetails, access to separate user - Forbidden",
+    'getUserDetails, access to separate user - Forbidden',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
@@ -192,43 +188,43 @@ describe("getUserDetails operation", () => {
   );
 
   test(
-    "Invalid User - Unauthorized",
+    'Invalid User - Unauthorized',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
-          userId: "user.unknown@demo.com",
+          userId: 'user.unknown@demo.com',
           password: AppConfig.defaultUserPassword,
         },
         ANDERSON_USER_KEY
       );
 
       expect(response.status).toBe(HttpStatus.Unauthorized);
-      expect(response.error).toContain("User not found");
+      expect(response.error).toContain('User not found');
     },
     TestConfig.longTestTimeout
   );
 
   test(
-    "Invalid Password - Unauthorized",
+    'Invalid Password - Unauthorized',
     async () => {
       const response = await ApiMessenger.getUserDetails(
         {
           userId: AppConfig.adminUserId,
-          password: "wrongpassword",
+          password: 'wrongpassword',
         },
         ANDERSON_USER_KEY
       );
 
       expect(response.status).toBe(HttpStatus.Unauthorized);
-      expect(response.error).toContain("Invalid password");
+      expect(response.error).toContain('Invalid password');
     },
     TestConfig.longTestTimeout
   );
 });
 
-describe("addBook operation", () => {
+describe('addBook operation', () => {
   // existing book ISBN
-  const BOOK_2_ISBN = "31AB208D-EA2D-458B-B708-744E16BBDE5A";
+  const BOOK_2_ISBN = '31AB208D-EA2D-458B-B708-744E16BBDE5A';
 
   let newBookDto: BookAddUpdateDto;
 
@@ -256,7 +252,7 @@ describe("addBook operation", () => {
   });
 
   test(
-    "addBook as Admin user",
+    'addBook as Admin user',
     async () => {
       const response = await ApiMessenger.addBook(
         {
@@ -282,9 +278,9 @@ describe("addBook operation", () => {
   );
 
   test(
-    "Customer cannot add a book - Forbidden",
+    'Customer cannot add a book - Forbidden',
     async () => {
-      const TUCKER_USER_EMAIL = "Savannah.Tucker@demo.com";
+      const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
 
       const response = await ApiMessenger.addBook(
         {
@@ -300,7 +296,7 @@ describe("addBook operation", () => {
   );
 
   test(
-    "Invalid, duplicate ISBN - Bad Request",
+    'Invalid, duplicate ISBN - Bad Request',
     async () => {
       newBookDto.isbn = BOOK_2_ISBN;
       const response = await ApiMessenger.addBook(
@@ -312,7 +308,193 @@ describe("addBook operation", () => {
       );
 
       expect(response.status).toBe(HttpStatus.BadRequest);
-      expect(response.error).toContain("Duplicate ISBN");
+      expect(response.error).toContain('Duplicate ISBN');
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe('addUser operation', () => {
+  let newUserAddDto: UserAddUpdateDto;
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+
+    const newUserName = RandomData.randomPerson();
+    newUserAddDto = {
+      userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
+      userName: newUserName,
+      password: 'TestPassword123!',
+      role: UserRole.Customer,
+      isActive: true,
+      wallet: RandomData.randomDecimal(100, 200),
+    };
+  });
+
+  test(
+    'Add new user as Admin',
+    async () => {
+      const response = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data).toBeDefined();
+      expect(response.data?.userEmail).toBe(newUserAddDto.userEmail);
+      expect(response.data?.role).toBe(UserRole[UserRole.Customer]);
+      expect(response.data?.isActive).toBe(true);
+      expect(response.data?.key).toBeGreaterThan(0);
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    'Duplicate user email - Bad Request',
+    async () => {
+      const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
+      newUserAddDto.userEmail = TUCKER_USER_EMAIL;
+      const response = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(response.status).toBe(HttpStatus.BadRequest);
+      expect(response.error).toContain('Duplicate UserEmail');
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe('getBooksByGenre operation', () => {
+  const TUCKER_USER_EMAIL = 'Savannah.Tucker@demo.com';
+
+  const CHILDRENS_BOOKS = [
+    'The Stinky Cheese Man and Other Fairly Stupid Tales',
+    'Too Many Frogs',
+    'Gregor and the Prophecy of Bane',
+    'Where the Wild Things Are',
+  ];
+
+  const HISTORY_BOOKS = ['Citizen Soldiers', 'The American Revolution: An Intimate History'];
+
+  const FANTASY_BOOKS = ['The Way of Kings', 'The Hunger Games'];
+
+  beforeEach(() => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+  });
+
+  test.each([
+    [Genre.Childrens, CHILDRENS_BOOKS],
+    [Genre.History, HISTORY_BOOKS],
+    [Genre.Fantasy, FANTASY_BOOKS],
+  ])(
+    'Get books by Genre - %s',
+    async (searchGenre, expectedTitles) => {
+      const response = await ApiMessenger.getBooksByGenre(
+        {
+          userId: TUCKER_USER_EMAIL,
+          password: AppConfig.defaultUserPassword,
+        },
+        Genre[searchGenre]
+      );
+      expect(response.status).toBe(HttpStatus.OK);
+      expect(response.data).toBeDefined();
+      expect(response.data?.length).toBeGreaterThanOrEqual(expectedTitles.length);
+      // confirm expected book titles exist in response
+      expectedTitles.forEach((expectedBook) => {
+        const bookFound = response.data?.find((bk) => bk.title === expectedBook);
+        expect(bookFound).toBeDefined();
+      });
+      expect(response.data?.every((bk) => bk.genre === Genre[searchGenre])).toBe(true);
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe('purchaseBooks operation', () => {
+  const BOOK_PRICE = 20.0;
+  const DEFAULT_WALLET_AMOUNT = 30.0;
+  let newBookDetails: BookDetailsDto;
+  let newUserAddDto: UserAddUpdateDto;
+  beforeEach(async () => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+
+    // populate new user dto, but do (yet) add to system
+    const newUserName = RandomData.randomPerson();
+    newUserAddDto = {
+      userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
+      userName: newUserName,
+      password: 'TestPassword123!',
+      role: UserRole.Customer,
+      isActive: true,
+      wallet: DEFAULT_WALLET_AMOUNT, // sufficient funds for single book purchase test
+    };
+
+    // before each test, create a new book with
+    // price = $20 and stockQuantity = 3
+    const newBookDto: BookAddUpdateDto = {
+      title: RandomData.randomSentence(),
+      author: RandomData.randomPerson(),
+      isbn: RandomData.generateGUID(),
+      description: RandomData.randomSentence(),
+      genre: Genre.Fiction,
+      price: BOOK_PRICE,
+      stockQuantity: 3,
+    };
+
+    const addBookResponse = await ApiMessenger.addBook(
+      {
+        userId: AppConfig.adminUserId,
+        password: AppConfig.defaultUserPassword,
+      },
+      newBookDto
+    );
+    expect(addBookResponse.status).toBe(HttpStatus.OK);
+    expect(addBookResponse.data).toBeDefined();
+    newBookDetails = addBookResponse.data!; // force non-null for test use
+    Logger.info(`New book Key: ${newBookDetails.key}`);
+  });
+
+  test(
+    'Purchase book success',
+    async () => {
+      // first, add new user to system
+      const addUserResponse = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(addUserResponse.status).toBe(HttpStatus.OK);
+      expect(addUserResponse.data).toBeDefined();
+      Logger.debug(`Added new user: ${addUserResponse.data?.key}`);
+
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookDetails.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        requestedQuantity: 1,
+      };
+
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        {
+          userId: newUserAddDto.userEmail,
+          password: newUserAddDto.password,
+        },
+        purchaseRequestDto
+      );
+      expect(purchaseResponse.status).toBe(HttpStatus.OK);
+      expect(purchaseResponse.data).toBeDefined();
+      expect(purchaseResponse.data?.wallet).toBe('$10.00'); // $30 - $20 = $10
+      // expect child transaction with book key
+      const purchaseTransaction = purchaseResponse.data?.transactions.find(
+        (tx) => tx.purchaseBookKey === newBookDetails.key
+      );
+      expect(purchaseTransaction).toBeDefined(); // confirm transaction with key exists
     },
     TestConfig.longTestTimeout
   );
@@ -320,5 +502,5 @@ describe("addBook operation", () => {
 
 afterAll(() => {
   ProcessHandler.endProcess();
-  Logger.info("Closing BigBooks API process after tests");
+  Logger.info('Closing BigBooks API process after tests');
 });
