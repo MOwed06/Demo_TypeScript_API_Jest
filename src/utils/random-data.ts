@@ -1,11 +1,8 @@
-import * as FileHandler from './file-handler';
 import { randomUUID } from 'crypto';
 
-const FIRST_NAMES: string[] = FileHandler.readFileAsStrings('./src/data/first-names.txt');
-
-const FAMILY_NAMES: string[] = FileHandler.readFileAsStrings('./src/data/family-names.txt');
-
-const SENTENCES: string[] = FileHandler.readFileAsStrings('./src/data/poetry-rfrost.txt');
+import FIRST_NAMES from '../data/first-names.json';
+import FAMILY_NAMES from '../data/family-names.json';
+import SENTENCES from '../data/poetry-rfrost.json';
 
 /// Returns true with the given percentage chance (0-100)
 export const probability = (percentage: number): boolean => {
