@@ -498,6 +498,101 @@ describe('purchaseBooks operation', () => {
     },
     TestConfig.longTestTimeout
   );
+
+  test(
+    'Purchase book insufficient funds',
+    async () => {
+      // first, add new user to system
+      const addUserResponse = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(addUserResponse.status).toBe(HttpStatus.OK);
+      expect(addUserResponse.data).toBeDefined();
+      Logger.debug(`Added new user: ${addUserResponse.data?.key}`);
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookDetails.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        requestedQuantity: 2, // $40 purchase, exceeds $30 wallet
+      };
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        {
+          userId: newUserAddDto.userEmail,
+          password: newUserAddDto.password,
+        },
+        purchaseRequestDto
+      );
+      expect(purchaseResponse.status).toBe(HttpStatus.BadRequest);
+      expect(purchaseResponse.error).toContain('Insufficient funds');
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    'Purchase book insufficient stock',
+    async () => {
+      // first, add new user to system. increase wallet to cover purchase
+      newUserAddDto.wallet = 200.0; // increase wallet to avoid insufficient funds
+      const addUserResponse = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(addUserResponse.status).toBe(HttpStatus.OK);
+      expect(addUserResponse.data).toBeDefined();
+      Logger.debug(`Added new user: ${addUserResponse.data?.key}`);
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookDetails.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        requestedQuantity: 5, // exceeds stock quantity of 3
+      };
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        {
+          userId: newUserAddDto.userEmail,
+          password: newUserAddDto.password,
+        },
+        purchaseRequestDto
+      );
+      expect(purchaseResponse.status).toBe(HttpStatus.BadRequest);
+      expect(purchaseResponse.error).toContain('Insufficient book stock');
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    "Inative user can't purchase book",
+    async () => {
+      // first, add new user to system with isActive = false
+      newUserAddDto.isActive = false;
+      const addUserResponse = await ApiMessenger.addUser(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserAddDto
+      );
+      expect(addUserResponse.status).toBe(HttpStatus.OK);
+      expect(addUserResponse.data).toBeDefined();
+      Logger.debug(`Added new user: ${addUserResponse.data?.key}`);
+      const purchaseRequestDto: PurchaseRequestDto = {
+        bookKey: newBookDetails.key,
+        transactionConfirmation: RandomData.generateGUID(),
+        requestedQuantity: 1,
+      };
+      const purchaseResponse = await ApiMessenger.purchaseBooks(
+        { userId: newUserAddDto.userEmail, password: newUserAddDto.password },
+        purchaseRequestDto
+      );
+      expect(purchaseResponse.status).toBe(HttpStatus.BadRequest);
+      expect(purchaseResponse.error).toContain('User is deactivated');
+    },
+    TestConfig.longTestTimeout
+  );
 });
 
 afterAll(() => {
