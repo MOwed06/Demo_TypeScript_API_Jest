@@ -7,7 +7,11 @@
 
 import * as Config from './app-config.json';
 import { AuthRequest, AuthResponse } from './interfaces/auth-interface';
-import { UserAddUpdateDto, UserDetailsDto } from './interfaces/account-interface';
+import {
+  UserAddUpdateDto,
+  UserDetailsDto,
+  UserJsonPatchOperation,
+} from './interfaces/account-interface';
 import Logger from './utils/logger';
 import { BookReviewDto, BookReviewAddDto } from './interfaces/book-reviews-interface';
 import { BookAddUpdateDto, BookDetailsDto, BookOverviewDto } from './interfaces/book-interface';
@@ -198,5 +202,20 @@ export const purchaseBooks = async (
     HttpMethod.POST,
     authRequest,
     purchaseDto
+  );
+};
+
+// refer to AccountsController.cs, UpdateAccount()
+export const updateAccount = async (
+  authRequest: AuthRequest,
+  userKey: number,
+  patchOperations: UserJsonPatchOperation[]
+): Promise<ApiResponse<UserDetailsDto>> => {
+  const uri = `${ACCOUNTS_URI}/${userKey}`;
+  return await transmitRequest<UserDetailsDto, UserJsonPatchOperation[]>(
+    uri,
+    HttpMethod.PATCH,
+    authRequest,
+    patchOperations
   );
 };

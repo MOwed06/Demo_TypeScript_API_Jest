@@ -13,7 +13,11 @@ import * as RandomData from '../../src/utils/random-data';
 import { Genre, HttpStatus, UserRole, TransactionType } from '../../src/enumerations';
 import * as StringHelper from '../../src/utils/string-helper';
 import { BookAddUpdateDto, BookDetailsDto } from '../../src/interfaces/book-interface';
-import { UserAddUpdateDto } from 'src/interfaces/account-interface';
+import {
+  UserAddUpdateDto,
+  UserDetailsDto,
+  UserJsonPatchOperation,
+} from 'src/interfaces/account-interface';
 import { PurchaseRequestDto } from 'src/interfaces/transactions-interface';
 
 // calculate delay to allow API to launch, add 2 seconds buffer
@@ -590,6 +594,120 @@ describe('purchaseBooks operation', () => {
       );
       expect(purchaseResponse.status).toBe(HttpStatus.BadRequest);
       expect(purchaseResponse.error).toContain('User is deactivated');
+    },
+    TestConfig.longTestTimeout
+  );
+});
+
+describe('update user operation', () => {
+  let newUserDetails: UserDetailsDto;
+  const originalWalletAmount = 150.0;
+  beforeEach(async () => {
+    Logger.info(`Starting test: ${expect.getState().currentTestName}`);
+
+    const newUserName = RandomData.randomPerson();
+    const newUserAddDto = {
+      userEmail: `${newUserName.replace(' ', '.')}@demo.com`,
+      userName: newUserName,
+      password: 'TestPassword123!',
+      role: UserRole.Customer,
+      isActive: true,
+      wallet: originalWalletAmount,
+    };
+
+    const response = await ApiMessenger.addUser(
+      {
+        userId: AppConfig.adminUserId,
+        password: AppConfig.defaultUserPassword,
+      },
+      newUserAddDto
+    );
+    expect(response.status).toBe(HttpStatus.OK);
+    expect(response.data).toBeDefined();
+    Logger.debug(`Added new user: ${response.data?.key}, ${response.data?.userEmail}`);
+    newUserDetails = response.data!;
+  });
+
+  test(
+    'Update user wallet and name',
+    async () => {
+      const revisedWallet = originalWalletAmount + 50;
+      const revisedUserName = RandomData.randomPerson();
+      const patch: UserJsonPatchOperation[] = [
+        {
+          op: 'replace',
+          path: '/wallet',
+          value: revisedWallet,
+        },
+        {
+          op: 'replace',
+          path: '/userName',
+          value: revisedUserName,
+        },
+      ];
+
+      const updateUserResponse = await ApiMessenger.updateAccount(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserDetails.key,
+        patch
+      );
+
+      expect(updateUserResponse.data?.isActive).toBe(true);
+      expect(updateUserResponse.data?.wallet).toBe(StringHelper.toUSD(revisedWallet));
+      expect(updateUserResponse.data?.userName).toBe(revisedUserName);
+      expect(updateUserResponse.data?.userEmail).toBe(newUserDetails.userEmail); // unchanged
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    'Update user wallet invalid value - Bad Request',
+    async () => {
+      const patch: UserJsonPatchOperation[] = [
+        {
+          op: 'replace',
+          path: '/wallet',
+          value: -50, // invalid negative wallet
+        },
+      ];
+      const updateUserResponse = await ApiMessenger.updateAccount(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserDetails.key,
+        patch
+      );
+      expect(updateUserResponse.status).toBe(HttpStatus.BadRequest);
+      expect(updateUserResponse.error).toContain('Wallet must be between 1 and 5000');
+    },
+    TestConfig.longTestTimeout
+  );
+
+  test(
+    'Update user empty name - Bad Request',
+    async () => {
+      const patch: UserJsonPatchOperation[] = [
+        {
+          op: 'replace',
+          path: '/userName',
+          value: '',
+        },
+      ];
+
+      const updateUserResponse = await ApiMessenger.updateAccount(
+        {
+          userId: AppConfig.adminUserId,
+          password: AppConfig.defaultUserPassword,
+        },
+        newUserDetails.key,
+        patch
+      );
+      expect(updateUserResponse.status).toBe(HttpStatus.BadRequest);
+      expect(updateUserResponse.error).toContain('UserName field is required');
     },
     TestConfig.longTestTimeout
   );

@@ -1,5 +1,5 @@
-import * as Enum from "../enumerations";
-import { TransactionDto } from "./transactions-interface";
+import * as Enum from '../enumerations';
+import { TransactionDto } from './transactions-interface';
 
 // corresponds to BigBooks.API.Models.UserDetailsDto.cs
 export interface UserDetailsDto {
@@ -20,4 +20,11 @@ export interface UserAddUpdateDto {
   role: Enum.UserRole;
   isActive: boolean;
   wallet: number;
+}
+
+// corresponds to JsonPatchDocument applied to UserAddUpdateDto.cs
+export interface UserJsonPatchOperation {
+  op: 'replace'; // Only 'replace' operation is supported by BigBooks api
+  path: string;
+  value?: string | number | boolean | null;
 }

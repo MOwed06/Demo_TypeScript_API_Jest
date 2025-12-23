@@ -13,7 +13,7 @@ import * as ApiMessenger from './api-messenger';
 import { displayWithTime } from './utils/console-helper';
 import * as RandomData from './utils/random-data';
 import { Genre, UserRole } from './enumerations';
-import { UserAddUpdateDto } from './interfaces/account-interface';
+import { UserAddUpdateDto, UserJsonPatchOperation } from './interfaces/account-interface';
 import { PurchaseRequestDto } from './interfaces/transactions-interface';
 
 async function main(): Promise<void> {
@@ -120,6 +120,34 @@ async function main(): Promise<void> {
       // confirm database content for added user
       const dbUserRecord = DbHandler.getUser(newUserResponse.data.key);
       console.log('DB user record:', dbUserRecord);
+      console.log('\n');
+
+      // alter user wallet and user name
+      // note that user email is unchanged
+      const newWallet = userWallet + 50;
+      const revisedUserName = RandomData.randomPerson();
+      const patch: UserJsonPatchOperation[] = [
+        {
+          op: 'replace',
+          path: '/wallet',
+          value: newWallet,
+        },
+        {
+          op: 'replace',
+          path: '/userName',
+          value: revisedUserName,
+        },
+      ];
+
+      const updateUserResponse = await ApiMessenger.updateAccount(
+        {
+          userId: Config.adminUserId,
+          password: Config.defaultUserPassword,
+        },
+        newUserResponse.data.key,
+        patch
+      );
+      console.log('Update user response:', updateUserResponse.data);
       console.log('\n');
     }
 
