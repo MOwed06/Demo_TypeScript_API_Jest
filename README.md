@@ -29,7 +29,8 @@ The application is a brief exercise of a sampling of the operations of the BigBo
       - add book (POST, /api/books)
       - add book review (POST, /api/books/#/reviews)
       - get books by genre (GET, /api/books/genre?name=)
-      - purchase books (POST, /api/transactions/purchase)      
+      - purchase books (POST, /api/transactions/purchase)
+      - update user account (PATCH, /api/accounts/#)
 
 1. Database interaction
     - Direct access to the sqlite database was demonstrated using better-sqlite3.
@@ -76,9 +77,10 @@ Key elements of the test:
     - confirm rejection for insufficient customer wallet
     - confirm rejection for insufficient book stock
     - confirm rejection for deactivated user
-
-
-
+1. Test UpdateUser (patch) operation
+    - confirm update for user wallet and name
+    - confirm rejection for invalid wallet value
+    - confirm rejection for invalid name value
 
 ### Command Line Execution
 - From directory: Demo_TypeScript_API_Jest
